@@ -397,7 +397,7 @@ html[data-theme=dark] .card3d{opacity:1;filter:none}
     <button class="ib" id="eyeb" data-act="hide" aria-label="Скрыть суммы"><svg class="e-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="e-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.9 10.9 0 0112 20C5 20 1 12 1 12a18.5 18.5 0 015.1-5.9M9.9 4.2A9.1 9.1 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.2 3.2M14.1 14.1a3 3 0 11-4.2-4.2M1 1l22 22"/></svg></button>
     <button class="ib" data-act="settings" aria-label="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
   </header>
-  <div class="seg mode" id="mode"><button data-act="mode" data-v="p">Личные</button><button data-act="mode" data-v="b">Самозанятый</button><button data-act="mode" data-v="f">Фирма</button><button data-act="mode" data-v="x" id="xseg">Валюта</button></div>
+  <div class="seg mode" id="mode"><button data-act="mode" data-v="p">Личные</button><button data-act="mode" data-v="x" id="xseg">Валюта</button><button data-act="mode" data-v="b">Самозанятый</button><button data-act="mode" data-v="f">Фирма</button></div>
   <main id="main"></main>
   <nav id="nav">
     <button class="tb" data-act="tab" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg>Главная</button>
@@ -493,7 +493,7 @@ const sk=x=>x.f?'f':(x.x||x.b==='x')?'x':!!x.b;            /* раздел за�
 const secOf=x=>x.f?'f':(x.x||x.b==='x')?'x':x.b?'b':'p';
 const setSec=(r,s)=>{ if(s==='f')r.f=true; else if(s==='x')r.x=true; else if(s)r.b=true; return r };
 const ISO={'€':'EUR','$':'USD','£':'GBP','zł':'PLN','₽':'RUB','₴':'UAH','₸':'KZT','₾':'GEL'};
-const MODES=['p','b','f','x'];
+const MODES=['p','x','b','f'];
 const CUR=()=>mode==='x'&&S.xcur?S.xcur:S.cur;
 const BT=()=>mode==='x'?0:S.budget.total;
 const isSav=t=>t.t==='e'&&t.cat==='savings';
@@ -919,7 +919,7 @@ function acctSlide(md){
   return withMode(md,()=>{
     if(md==='b')ensureBizDemo(); if(md==='f')ensureFirmDemo();
     const lab={p:T('Личный'),b:T('Самозанятый'),f:T('Фирма'),x:T('Валютный')}[md];
-    if(md==='x'&&!S.xcur)return '<div class="slide lk" style="--i:3"><div class="stage" aria-hidden="true"><div class="par"><div class="cw"><img class="card3d" src="assets/card-x.webp" alt="" draggable="false"></div></div></div><span class="al">'+lab+'</span><div class="lkb" data-act="xadd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><b>'+T('Добавить счёт')+'</b><span>'+T('в другой валюте')+'</span></div></div>';
+    if(md==='x'&&!S.xcur)return '<div class="slide lk" style="--i:1"><div class="stage" aria-hidden="true"><div class="par"><div class="cw"><img class="card3d" src="assets/card-x.webp" alt="" draggable="false"></div></div></div><span class="al">'+lab+'</span><div class="lkb" data-act="xadd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><b>'+T('Добавить счёт')+'</b><span>'+T('в другой валюте')+'</span></div></div>';
     if(locked(md))return '<div class="slide lk" style="--i:'+MODES.indexOf(md)+'"><div class="stage" aria-hidden="true"><div class="par"><div class="cw"><img class="card3d" src="assets/card-'+md+'.webp" alt="" draggable="false"></div></div></div><span class="al">'+lab+'</span><div class="lkb" data-act="paywall" data-v="'+md+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><b>'+PLANS[md].price+T(' в месяц</b><span>Открыть счёт</span></div></div>');
     const m=md===mode0?curMonth:periodOfDate(todayStr()), s=sums(m), bal=s.carry+s.inc-s.exp-s.sav;
     return '<div class="slide" style="--i:'+MODES.indexOf(md)+'"><div class="stage" aria-hidden="true"><div class="par"><div class="cw"><img class="card3d" src="assets/card-'+md+'.webp" alt="" draggable="false"></div></div></div><span class="al">'+lab+'</span>'
@@ -931,9 +931,9 @@ let mode0='p';
 function acctHero(m,noActs){
   mode0=mode;
   const act=(a,l,ic)=>'<div class="ac"><button data-act="'+a+'" aria-label="'+l+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ic+'</svg></button><span>'+l+'</span></div>';
-  return '<section class="acct"><div class="slides" id="slides">'+acctSlide('p')+acctSlide('b')+acctSlide('f')+acctSlide('x')+'</div>'
+  return '<section class="acct"><div class="slides" id="slides">'+acctSlide('p')+acctSlide('x')+acctSlide('b')+acctSlide('f')+'</div>'
    +T('<button class="sch l" data-act="sprev" aria-label="Предыдущий счёт"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><button class="sch r" data-act="snext" aria-label="Следующий счёт"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>')
-   +'<div class="pager" id="pager" role="tablist"><i data-act="mode" data-v="p" class="'+(mode==='p'?'on':'')+'"></i><i data-act="mode" data-v="b" class="'+(mode==='b'?'on':'')+'"></i><i data-act="mode" data-v="f" class="'+(mode==='f'?'on':'')+'"></i><i data-act="mode" data-v="x" class="'+(mode==='x'?'on':'')+'"></i></div>'
+   +'<div class="pager" id="pager" role="tablist"><i data-act="mode" data-v="p" class="'+(mode==='p'?'on':'')+'"></i><i data-act="mode" data-v="x" class="'+(mode==='x'?'on':'')+'"></i><i data-act="mode" data-v="b" class="'+(mode==='b'?'on':'')+'"></i><i data-act="mode" data-v="f" class="'+(mode==='f'?'on':'')+'"></i></div>'
    +(noActs?'</section>':'<div class="acts">'+act('addi',T('Доход'),'<path d="M12 19V5M5 12l7-7 7 7"/>')+act('add',T('Расход'),'<path d="M12 5v14M19 12l-7 7-7-7"/>')+T('<div class="ac mic"><button data-act="voice" aria-label="Голосовой ввод"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></button><span>Голос</span></div>')+act('adds',T('Сбережение'),'<path d="M4 12h16M4 12l4-4M4 12l4 4M20 7v10"/>')+act('addfixed',T('Платёж'),'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/>')+'</div></section>');
 }
 function initSlides(){

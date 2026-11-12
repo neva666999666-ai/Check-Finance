@@ -920,9 +920,20 @@ function vcPre(s){
   s=s.replace(/(\d+(?:[.,]\d+)?)\s*(?:к|k|тыс\.?|тысяч[аиу]?|thousand)(?![a-zЀ-ӿ])/gi,(m,a)=>String(Math.round(parseFloat(a.replace(',','.'))*1000)));
   return s;
 }
+const VC_MAJ='(?:евро|euros?|eur|€|долл[а-я]*|dollars?|bucks?|\\$|грн|гривн[а-я]*|zł|злот[а-я]*|фунт[а-я]*|£|pounds?|руб[а-я]*|₽|тенге|лари)', VC_MIN='(?:евроцент[а-я]*|цент[а-я]*|cents?|коп[а-я]*|грош[а-я]*|пенс[а-я]*|pence|penny|pennies|¢)(?![a-zа-я])';
+function vcCents(t){
+  const p2=d=>String(d).padStart(2,'0').slice(0,2);
+  /* «5 евро 70 центов», «5 евро и 70 центов», «5 евро 7 центов» */
+  t=t.replace(new RegExp('(\\d+)\\s*'+VC_MAJ+'\\s*(?:и\\s+|and\\s+)?(\\d{1,2})\\s*'+VC_MIN,'gi'),(m,a,b)=>a+'.'+p2(b.length===1?'0'+b:b));
+  /* «5 евро 70» (две цифры без слова «центов») */
+  t=t.replace(new RegExp('(\\d+)\\s*'+VC_MAJ+'\\s*(?:и\\s+|and\\s+)?(\\d{2})(?![\\d.])','gi'),'$1.$2');
+  /* «€5 70» не трогаем; «70 центов» отдельно = 0.70 */
+  t=t.replace(new RegExp('(?<![\\d.])(\\d+)\\s*'+VC_MIN,'gi'),(m,a)=>String(Math.round(parseInt(a,10))/100));
+  return t;
+}
 function localParse(text){
-  let t=vcPre(text).replace(/(\d)[,](\d)/g,'$1.$2').replace(/(\d+)\s*(?:евро|euros?|eur|€)\s*(\d{1,2})(?!\d)/gi,'$1.$2');
-  const parts=t.split(/[;\n]|,|\s(?:потом|еще|ещё)\s|\sи\s(?=(?:потратил|оплатил|купил|заплатил|получил|заработал|отложил|пришло))|\s(?:then|also)\s|\sand\s(?=(?:spent|paid|bought|received|earned|saved|got))/i).map(x=>x.trim()).filter(Boolean);
+  let t=vcCents(vcPre(text).replace(/(\d)[,](\d)/g,'$1.$2'));
+  const parts=t.split(/[;\n]|,|\s(?:потом|еще|ещё)\s|\sи\s(?=\d)|\sand\s(?=\d)|\sи\s(?=(?:потратил|оплатил|купил|заплатил|получил|заработал|отложил|пришло))|\s(?:then|also)\s|\sand\s(?=(?:spent|paid|bought|received|earned|saved|got))/i).map(x=>x.trim()).filter(Boolean);
   const out=[]; let sticky=null;
   const all=t.toLowerCase().replace(/ё/g,T('е')); const firmW=/фирм|\bсиа\b|\bsia\b|компани|\bооо\b|company|\bfirm\b|\bltd\b|\bllc\b/, bizW=/самозанят|бизнес|\bип\b|для работы|по работе|self-employed|self employed|freelance|business|sole trader|for work/, perW=/личн|домашн|для себя|personal|\bhome\b|for myself/;
   for(const part of parts){
@@ -977,7 +988,7 @@ async function aiParse(text){
      +'f: true для фирмы (SIA, «фирма», «компания», «ООО»); тогда b=false. Если раздел не назван, '+(mode==='f'?'f=true':'b='+(mode==='b'))+'.\n'
      +'Категории f=true расходы: '+lst('e','f')+'. Доходы: '+lst('i','f')+'.\n'
      +'Категории b=false расходы: '+lst('e',false)+'. Доходы: '+lst('i',false)+'.\nКатегории b=true расходы: '+lst('e',true)+'. Доходы: '+lst('i',true)+'.\n'
-     +'Сегодня '+todayStr()+'. «вчера», «позавчера» считай от сегодня. Сумма в валюте приложения, десятичная часть через точку («6,45» → 6.45, «6 евро 45» → 6.45). Несколько трат в одной фразе — несколько элементов. Если сумма не названа, пропусти пункт.\n'
+     +'Сегодня '+todayStr()+'. «вчера», «позавчера» считай от сегодня. Сумма в валюте приложения, десятичная часть через точку («6,45» → 6.45, «6 евро 45» → 6.45, «6 евро 45 центов» → 6.45, «70 центов» → 0.70, «5 евро 5 центов» → 5.05). Несколько трат в одной фразе — несколько элементов. Если сумма не названа, пропусти пункт.\n'
      +'ЦЕЛИ НАКОПЛЕНИЙ (существующие: '+(S.goals.map(g=>g.name).join('; ')||'нет')+'). Если человек просит создать/поставить цель или накопить на что-то («поставь цель купить стол за 200») — верни {"k":"goal","name":"стол","amt":200} и НЕ создавай трату. Если просит положить/отложить деньги в существующую цель — {"k":"fund","name":"точное название цели","amt":число}. Обычные траты и доходы — без поля k.\nТекст: +text+';
     const r=await sm.json(prompt,{modelTier:'quick',cache:false});
     return Array.isArray(r)?r:(r&&Array.isArray(r.items)?r.items:null);

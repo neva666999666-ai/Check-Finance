@@ -94,6 +94,8 @@ main{flex:1;overflow-y:auto;padding:12px 16px 120px;display:flex;flex-direction:
 .rt small{color:var(--faint);font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .amt{color:var(--exp);font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap;font-size:13.5px}
 .amt.i{color:var(--inc)}.amt.n{color:var(--ink)}.tsum.e{color:var(--exp)}.tsum.i{color:var(--inc)}
+.chip.cg{padding:0;gap:0;align-items:stretch}.chip.cg>button{display:inline-flex;align-items:center;gap:6px;color:inherit;font:inherit;font-weight:inherit;padding:8px 2px 8px 13px;border-radius:10px 0 0 10px}.chip.cg>.cmore{padding:8px 11px 8px 7px;border-radius:0 10px 10px 0;opacity:.6;font-weight:700;letter-spacing:.05em}.chip.cg>.cmore:hover{opacity:1}
+.cr.crw{flex-direction:row;align-items:flex-start;gap:2px}.crw .crb{flex:1;min-width:0;display:block;width:auto;text-align:left}.crw .cmore{flex:none;padding:6px 10px;color:var(--faint);font-weight:700}.cr .l .cmore{flex:none;padding:0 4px 0 8px;color:var(--faint);font-weight:700}
 .sw{width:32px;height:32px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(var(--w),.25);flex:none}.sw.on{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--onbg)}
 .btn{background:var(--btnbg);color:var(--btnink);font-weight:600;padding:13px 18px;border-radius:12px;text-align:center;flex:1;box-shadow:inset 0 1px 0 #fff,inset 0 -2px 0 rgba(0,0,0,.18),0 14px 30px -12px rgba(120,160,215,.5)}
 .btn.ghost{background:linear-gradient(180deg,rgba(var(--w),.09),rgba(var(--w),.03));color:var(--ink);box-shadow:inset 0 1px 0 rgba(var(--w),.14),inset 0 0 0 1px rgba(var(--ik),.12),0 10px 24px -10px rgba(0,0,0,.8)}
@@ -792,12 +794,12 @@ function openFixed(id){
    +T('<label class="f">Название<input id="fxn" class="inp" type="text" maxlength="60" placeholder="Например: Аренда" value="')+esc(draft.name)+'"></label>'
    +T('<input id="fxa" class="inp amount" inputmode="decimal" placeholder="0" aria-label="Сумма" value="')+esc(draft.amt)+'">'
    +T('<label class="f">День месяца (1–31)<input id="fxd" class="inp" inputmode="numeric" value="')+esc(draft.day)+'"></label>'
-   +T('<div><div class="lab" style="display:flex;justify-content:space-between;align-items:center">Категория<button class="link" data-act="catsedit">Изменить</button></div><div class="chips" id="cats"></div></div>')
+   +T('<div><div class="lab">Категория</div><div class="chips" id="cats"></div></div>')
    +'<div class="err" id="fe"></div><div class="btns">'+(f?T('<button class="btn ghost" data-act="delfixed" style="flex:none;color:var(--bad)">Удалить</button>'):'')+T('<button class="btn" data-act="savefixed">Сохранить</button></div>'));
   paintFx();
   $('#fxn').oninput=e=>{draft.name=e.target.value}; $('#fxa').oninput=e=>{draft.amt=e.target.value}; $('#fxd').oninput=e=>{draft.day=e.target.value};
 }
-function paintFx(){ $('#cats').innerHTML=listFor('e',draft.b).filter(c=>c.id!=='savings').map(c=>'<button class="chip'+(draft.cat===c.id?' on':'')+'" data-act="fcat" data-id="'+c.id+'"><span class="dot" style="background:'+c.c+';width:9px;height:9px"></span>'+esc(c.n)+'</button>').join('')+'<button class="chip" data-act="catplus" data-v="fx">+ '+T('Новая')+'</button>' }
+function paintFx(){ $('#cats').innerHTML=listFor('e',draft.b).filter(c=>c.id!=='savings').map(c=>'<span class="chip cg'+(draft.cat===c.id?' on':'')+'"><button data-act="fcat" data-id="'+esc(c.id)+'"><span class="dot" style="background:'+esc(c.c)+';width:9px;height:9px"></span>'+esc(c.n)+'</button><button class="cmore" data-act="catone" data-v="fx" data-id="'+esc(c.id)+'" aria-label="'+T('Изменить')+'">⋯</button></span>').join('')+'<button class="chip" data-act="catplus" data-v="fx">+ '+T('Новая')+'</button>' }
 function saveFixed(){
   const v=num(draft.amt), d=Math.round(num(draft.day));
   if(!draft.name.trim()){$('#fe').textContent=T('Введите название');return}
@@ -1254,7 +1256,7 @@ function vStats(m,s){
   let h='';
   const cats=Object.keys(s.byName).sort((a,b)=>s.byName[b]-s.byName[a]);
   h+=T('<section class="card g"><h3>Расходы по категориям</h3>')+(cats.length?pieChart(s,cats)+'<div>'+cats.map(id=>{const c=catInfo(id); const v=s.byName[id]; const p=v/s.exp*100;
-    return '<div class="cr pr'+(pieSel===id?' on':'')+'" data-act="pie" data-id="'+id+'"><div class="l"><span class="dot" style="background:'+c.c+'"></span><span class="n">'+esc(c.n)+'</span><span class="v">'+money(v)+' <small>'+Math.round(p)+'%</small></span></div>'+bar(p,c.c)+'</div>'}).join('')+'</div>':T('<p class="empty">В этом периоде расходов нет</p>'))+'</section>';
+    return '<div class="cr pr'+(pieSel===id?' on':'')+'" data-act="pie" data-id="'+id+'"><div class="l"><span class="dot" style="background:'+c.c+'"></span><span class="n">'+esc(c.n)+'</span><span class="v">'+money(v)+' <small>'+Math.round(p)+'%</small></span>'+(String(id).indexOf('c:')===0?'':'<button class="cmore" data-act="catone" data-v="bud" data-id="'+esc(id)+'" aria-label="'+T('Изменить')+'">⋯</button>')+'</div>'+bar(p,c.c)+'</div>'}).join('')+'</div>':T('<p class="empty">В этом периоде расходов нет</p>'))+'</section>';
   h+=T('<section class="card"><h3>Расходы по дням</h3>')+dailyChart(m,s)+'</section>';
   if(s.inc>0&&mode==='p'){
     const need=s.byGroup.need/s.inc*100, want=s.byGroup.want/s.inc*100, save=Math.max(0,(s.inc-s.exp)/s.inc*100);
@@ -1269,8 +1271,8 @@ function vStats(m,s){
 }
 function vBudget(m,s){
   const b=S.budget.total; let h=T('<section class="card"><div class="hd"><h3>Расчётный период</h3><button class="link" data-act="setpay">Изменить</button></div><p>Зарплата приходит <b>')+ordDay(S.payday)+'</b></p><p class="mut">'+T('Сейчас: ')+pLabel(m)+', '+pLen(m)+T(' дн. Бюджет, баланс и прогноз считаются за такой период.</p></section><section class="card"><div class="hd"><h3>Бюджет на период</h3><button class="link" data-act="settotal">')+(b?T('Изменить'):T('Задать'))+'</button></div><div class="big" style="font-size:26px">'+(b?moneyR(b):T('не задан'))+'</div>'+(b?bar(s.exp/b*100,s.exp>b?'var(--bad)':'var(--bar)')+T('<p class="mut">Потрачено ')+moneyR(s.exp)+', '+(b>=s.exp?T('осталось ')+moneyR(b-s.exp):T('перерасход ')+moneyR(s.exp-b))+'</p>':T('<p class="mut">Общий лимит нужен для подсказок о ежедневных тратах и прогноза.</p>'))+'</section>';
-  h+=T('<section class="card g"><div class="hd"><h3>Лимиты по категориям</h3><button class="link" data-act="cats">Изменить категории</button></div><div>')+CE.filter(c=>c.id!=='savings').map(c=>{const lim=S.budget.cats[c.id]||0, sp=s.byCat[c.id]||0, p=lim?sp/lim*100:0;
-    return '<button class="cr" data-act="setcat" data-id="'+c.id+'"><div class="l"><span class="dot" style="background:'+c.c+'"></span><span class="n">'+esc(c.n)+'</span><span class="v">'+(lim?money(sp)+T(' <small>из ')+moneyR(lim)+'</small>':'<small>'+(sp?money(sp)+' · ':'')+T('без лимита</small>'))+'</span></div>'+(lim?bar(p,p>100?'var(--bad)':p>=80?'var(--warn)':c.c):'')+'</button>'}).join('')+'</div></section>';
+  h+=T('<section class="card g"><h3>Лимиты по категориям</h3><div>')+CE.filter(c=>c.id!=='savings').map(c=>{const lim=S.budget.cats[c.id]||0, sp=s.byCat[c.id]||0, p=lim?sp/lim*100:0;
+    return '<div class="cr crw"><button class="crb" data-act="setcat" data-id="'+c.id+'"><div class="l"><span class="dot" style="background:'+c.c+'"></span><span class="n">'+esc(c.n)+'</span><span class="v">'+(lim?money(sp)+T(' <small>из ')+moneyR(lim)+'</small>':'<small>'+(sp?money(sp)+' · ':'')+T('без лимита</small>'))+'</span></div>'+(lim?bar(p,p>100?'var(--bad)':p>=80?'var(--warn)':c.c):'')+'</button><button class="cmore" data-act="catone" data-v="bud" data-id="'+esc(c.id)+'" aria-label="'+T('Изменить')+'">⋯</button></div>'}).join('')+'</div></section>';
   h+=goalsCard();
   return h;
 }
@@ -1576,7 +1578,7 @@ function openTx(id){
   sheet('<h2>'+(t?T('Изменить операцию'):T('Новая операция'))+T('</h2><div class="seg"><button id="sg-e" data-act="type" data-v="e">Расход</button><button id="sg-i" data-act="type" data-v="i">Доход</button></div>')
    +T('<input id="fa" class="inp amount" inputmode="decimal" placeholder="0" aria-label="Сумма" value="')+esc(draft.amt)+'">'
    +'<div id="fxw" hidden><div class="lab">'+T('Обязательные платежи')+'</div><div class="chips" id="fxs"></div></div>'
-   +T('<div><div class="lab" style="display:flex;justify-content:space-between;align-items:center">Категория<button class="link" data-act="catsedit">Изменить</button></div><div class="chips" id="cats"></div></div>')
+   +T('<div><div class="lab">Категория</div><div class="chips" id="cats"></div></div>')
    +T('<label class="f">Дата<input id="fd" class="inp" type="date" value="')+draft.date+'"></label>'
    +'<label class="f">'+(draft.b?T('Клиент или заметка'):T('Заметка'))+'<input id="fn" class="inp" type="text" maxlength="80" placeholder="'+(draft.b?T('Например: Клиент А, договор 12'):T('Например: Maxima, бензин'))+'" value="'+esc(draft.note)+'"></label>'
    +'<label class="f" id="scw" hidden>'+T('На что ушли деньги')+'<input id="scn" class="inp" type="text" maxlength="40" placeholder="'+T('Например: Подарок маме')+'" value="'+esc(t&&t.sc?t.sc:'')+'"></label><div class="chips" id="scs"></div>'+'<div id="rcw"><div class="lab">'+T('Чек')+'</div><div class="rcb" id="rcb"></div></div>'+'<div class="err" id="fe"></div><div class="btns">'+(t?T('<button class="btn ghost" data-act="deltx" style="flex:none;color:var(--bad)">Удалить</button>'):'')+T('<button class="btn" data-act="savetx">Сохранить</button></div>'));
@@ -1590,7 +1592,7 @@ function paintTx(){
   $('#fa').style.color=draft.t==='i'?'var(--good)':'var(--ink)'; const rw=$('#rcw'); if(rw)rw.hidden=draft.t==='i';
   const isO=OTHER_IDS.includes(draft.cat), sw=$('#scw'); if(sw){ sw.hidden=!isO; sw.firstChild.textContent=draft.t==='i'?T('Откуда пришли деньги'):T('На что ушли деньги'); const ss=$('#scs'); if(ss){ if(isO){ const nm=[]; S.tx.forEach(x=>{ if(x.sc&&OTHER_IDS.includes(x.cat)&&x.t===draft.t&&secOf(x)===(draft.b==='f'?'f':draft.b?'b':'p')&&!nm.includes(x.sc))nm.push(x.sc) }); scNames=nm.slice(0,6); ss.innerHTML=scNames.map((n,i)=>'<button class="chip" data-act="scpick" data-i="'+i+'">'+esc(n)+'</button>').join('') } else ss.innerHTML='' } }
   paintFxPick();
-  $('#cats').innerHTML=listFor(draft.t,draft.b).filter(c=>c.id!=='savings').map(c=>'<button class="chip'+(draft.cat===c.id?' on':'')+'" data-act="pickcat" data-id="'+esc(c.id)+'"><span class="dot" style="background:'+esc(c.c)+';width:9px;height:9px"></span>'+esc(c.n)+'</button>').join('')+'<button class="chip" data-act="catplus">+ '+T('Новая')+'</button>';
+  $('#cats').innerHTML=listFor(draft.t,draft.b).filter(c=>c.id!=='savings').map(c=>'<span class="chip cg'+(draft.cat===c.id?' on':'')+'"><button data-act="pickcat" data-id="'+esc(c.id)+'"><span class="dot" style="background:'+esc(c.c)+';width:9px;height:9px"></span>'+esc(c.n)+'</button><button class="cmore" data-act="catone" data-v="tx" data-id="'+esc(c.id)+'" aria-label="'+T('Изменить')+'">⋯</button></span>').join('')+'<button class="chip" data-act="catplus">+ '+T('Новая')+'</button>';
 }
 let fxPickList=[];
 function paintFxPick(){
@@ -1633,8 +1635,13 @@ function catFrom(kind,openNew){
   const b=d.b; CS={t:kind==='fx'?'e':d.t,s:b==='f'?'f':b?'b':'p'};
   if(openNew)catEdit(null); else paintCats();
 }
+function catOne(kind,id){
+  if(kind==='bud'){ CS={t:'e',s:mode}; if(!listFor('e',csB()).some(c=>c.id===id))return; CATRET={kind:'bud',direct:true}; catEdit(id); return }
+  catFrom(kind,false); CATRET.direct=true; catEdit(id);
+}
 function catReturn(){
   const r=CATRET; CATRET=null; if(!r)return;
+  if(r.kind==='bud'){ closeModal(); render(); return }
   const L=()=>listFor(r.kind==='fx'?'e':r.d.t,r.d.b);
   if(r.kind==='fx'){ openFixed(r.eid); draft=r.d; editId=r.eid; if(!L().some(c=>c.id===draft.cat))draft.cat=L()[0].id;
     $('#fxn').value=draft.name; $('#fxa').value=draft.amt; $('#fxd').value=draft.day; paintFx(); return }
@@ -1672,13 +1679,13 @@ function catSave(){
   const C=S.cats||(S.cats={ov:{},hide:[],add:[]}); const b=csB(), key=catKey(CS.t,b);
   if(cd.id){ if(cd.custom){ const a=C.add.find(x=>x.id===cd.id); if(a){a.n=n;a.c=cd.c} } else { const base=CATBASE[key].find(x=>x.id===cd.id); C.ov[cd.id]={}; if(n!==base.n)C.ov[cd.id].n=n; if(cd.c.toLowerCase()!==base.c.toLowerCase())C.ov[cd.id].c=cd.c; if(!C.ov[cd.id].n&&!C.ov[cd.id].c)delete C.ov[cd.id] } }
   else { const nid='u'+uid(); C.add.push({id:nid,k:key,n,c:cd.c}); if(CATRET)CATRET.d.cat=nid }
-  touch(); applyCats(); render(); if(CATRET&&!cd.id0&&!isEdit)catReturn(); else paintCats();
+  touch(); applyCats(); render(); if(CATRET&&(CATRET.direct||!isEdit))catReturn(); else paintCats();
 }
 function catUsage(id){ return S.tx.filter(t=>t.cat===id).length+S.fixed.filter(f=>f.cat===id).length+(S.budget&&S.budget.cats&&S.budget.cats[id]?1:0) }
 function catRemove(id){
   const C=S.cats||(S.cats={ov:{},hide:[],add:[]}), x=C.add.find(a=>a.id===id);
   if(x)C.add=C.add.filter(a=>a.id!==id); else if(!C.hide.includes(id))C.hide.push(id);
-  touch(); applyCats(); paintCats(); render();
+  touch(); applyCats(); render(); if(CATRET&&CATRET.direct)catReturn(); else paintCats();
 }
 function catMoveAndRemove(id,to){
   const ms=new Set(); S.tx.forEach(t=>{ if(t.cat===id){ t.cat=to; ms.add(mk(t.date)) } }); S.fixed.forEach(f=>{ if(f.cat===id)f.cat=to });
@@ -2031,7 +2038,7 @@ document.addEventListener('keydown',e=>{
 (function(){ let tm=0, fired=false;
   const stop=()=>{clearTimeout(tm)};
   document.addEventListener('pointerdown',e=>{ const b=e.target.closest&&e.target.closest('[data-act="pickcat"],[data-act="fcat"]'); fired=false; if(!b)return;
-    tm=setTimeout(()=>{ fired=true; const id=b.dataset.id, kind=b.dataset.act==='fcat'?'fx':'tx'; catFrom(kind,false); catEdit(id) },550) });
+    tm=setTimeout(()=>{ fired=true; catOne(b.dataset.act==='fcat'?'fx':'tx',b.dataset.id) },550) });
   ['pointerup','pointermove','pointercancel','scroll'].forEach(n=>document.addEventListener(n,stop,true));
   document.addEventListener('click',e=>{ if(fired){ e.stopPropagation(); e.preventDefault(); fired=false } },true);
 })();
@@ -2107,6 +2114,7 @@ document.addEventListener('click',ev=>{
     case 'wlsend': wlSend(v); break;
     case 'tt': ttN++; if(ttN>=5){ttN=0; try{localStorage.setItem('fin_test','1')}catch(e){} TEST_UNLOCK=true; closeModal(); render(); vToast('Test mode on')} break;
     case 'testoff': try{localStorage.setItem('fin_test','0')}catch(e){} TEST_UNLOCK=false; if(locked(mode))mode='p'; closeModal(); render(); vToast(T('Тестовый доступ выключен')); break;
+    case 'catone': catOne(v,id); break;
     case 'catsedit': catFrom(v==='fx'?'fx':'tx',false); break;
     case 'catplus': catFrom(v==='fx'?'fx':'tx',true); break;
     case 'catdone': catReturn(); break;
@@ -2114,7 +2122,7 @@ document.addEventListener('click',ev=>{
     case 'cstype': CS.t=v; paintCats(); break;
     case 'catedit': catEdit(id); break;
     case 'catnew': catEdit(null); break;
-    case 'catback': paintCats(); break;
+    case 'catback': if(CATRET&&CATRET.direct)catReturn(); else paintCats(); break;
     case 'catcolor': cd.c=v; paintSw(); { const ci=$('#cec'); if(ci)ci.value=v } break;
     case 'catsave': catSave(); break;
     case 'catdel': catDel(); break;

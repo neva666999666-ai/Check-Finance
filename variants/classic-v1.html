@@ -1215,11 +1215,13 @@ function vNews(){
 /* ---------- можно тратить сегодня / частые траты ---------- */
 const dailyOf=()=>0;
 function spendCalc(m,s){
-  const b=S.budget.total, td=todayStr(), left=Math.max(1,pLen(m)-dayIdx(m,td)), unpaid=fixedUnpaid(m);
-  const today=s.list.filter(t=>t.t==='e'&&!isSav(t)&&t.date===td).reduce((a,t)=>a+t.amt,0);
-  const cash=s.carry+s.inc-s.exp-s.sav, availCash=cash-unpaid, availBud=b>0?b-s.exp-s.sav-unpaid:0;
-  const useBud=b>0&&availBud>0, avail=useBud?availBud:availCash, base=b>0?b:s.inc+s.carry;
-  return {base,left,unpaid,today,avail,cash,budOver:b>0&&!useBud,auto:(avail+today)/left};
+  /* обязательные платежи (и оплаченные, и нет) не влияют на дневную норму */
+  const b=S.budget.total, td=todayStr(), left=Math.max(1,pLen(m)-dayIdx(m,td));
+  const fp=s.list.filter(t=>t.t==='e'&&!isSav(t)&&t.fid).reduce((a,t)=>a+t.amt,0), exp=s.exp-fp;
+  const today=s.list.filter(t=>t.t==='e'&&!isSav(t)&&!t.fid&&t.date===td).reduce((a,t)=>a+t.amt,0);
+  const cash=s.carry+s.inc-exp-s.sav, availBud=b>0?b-exp-s.sav:0;
+  const useBud=b>0&&availBud>0, avail=useBud?availBud:cash, base=b>0?b:s.inc+s.carry;
+  return {base,left,unpaid:0,today,avail,cash,budOver:b>0&&!useBud,auto:(avail+today)/left};
 }
 function spendCard(m,s){
   if(m!==periodOfDate(todayStr()))return '';

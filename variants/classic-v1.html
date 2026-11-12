@@ -1312,18 +1312,18 @@ function vHist(m,s){
     +T('<div class="hd" style="padding:4px 4px 0"><span class="mut">Остаток за период</span><b class="tsum')+(bal<0?' neg':'')+'" style="color:'+(bal<0?'var(--bad)':'var(--ink)')+'">'+(bal<0?'−':'')+moneyR(Math.abs(bal))+'</b></div>';
 }
 function dailyChart(m,s){
-  const n=s.byDay.length, mx=Math.max(1,...s.byDay), W=340, H=120, base=100, bw=W/n, isCur=m===periodOfDate(todayStr()), td=dayIdx(m,todayStr())+1, ps=pStart(m);
+  const n=s.byDay.length, mx=Math.max(1,...s.byDay), W=340, H=150, base=128, bw=W/n, isCur=m===periodOfDate(todayStr()), td=dayIdx(m,todayStr())+1, ps=pStart(m);
   let g='';
-  s.byDay.forEach((v,i)=>{ if(isCur&&i+1>td)return; const h=v/mx*(base-14); g+='<rect x="'+(i*bw+bw*.15).toFixed(1)+'" y="'+(base-h).toFixed(1)+'" width="'+(bw*.7).toFixed(1)+'" height="'+Math.max(v>0?1.5:0,h).toFixed(1)+'" rx="2" fill="var(--bar)" opacity="'+(isCur&&i+1===td?1:.75)+'"/>'});
-  let t=''; [1,Math.ceil(n/2),n].forEach(d=>{t+='<text x="'+((d-1)*bw+bw/2).toFixed(1)+'" y="115" text-anchor="'+(d===1?'start':d===n?'end':'middle')+'">'+new Date(ps.getFullYear(),ps.getMonth(),ps.getDate()+d-1).getDate()+'</text>'});
-  return '<svg class="ch" viewBox="0 0 '+W+' '+H+T('" role="img" aria-label="Расходы по дням"><line x1="0" x2="')+W+'" y1="'+base+'" y2="'+base+'" stroke="var(--line)"/><line x1="0" x2="'+W+'" y1="'+(base-(base-14)/2)+'" y2="'+(base-(base-14)/2)+T('" stroke="var(--line)" stroke-dasharray="2 3"/><text x="0" y="9">макс. ')+moneyR(mx)+'</text>'+g+t+'</svg>';
+  s.byDay.forEach((v,i)=>{ if(isCur&&i+1>td)return; const h=v/mx*(base-26); g+='<rect x="'+(i*bw+bw*.15).toFixed(1)+'" y="'+(base-h).toFixed(1)+'" width="'+(bw*.7).toFixed(1)+'" height="'+Math.max(v>0?1.5:0,h).toFixed(1)+'" rx="3" fill="var(--bar)" opacity="'+(isCur&&i+1===td?1:v===mx?.95:.6)+'"/>'});
+  let t=''; [1,Math.ceil(n/2),n].forEach(d=>{t+='<text x="'+((d-1)*bw+bw/2).toFixed(1)+'" y="145" text-anchor="'+(d===1?'start':d===n?'end':'middle')+'">'+new Date(ps.getFullYear(),ps.getMonth(),ps.getDate()+d-1).getDate()+'</text>'});
+  return '<svg class="ch" viewBox="0 0 '+W+' '+H+T('" role="img" aria-label="Расходы по дням"><line x1="0" x2="')+W+'" y1="'+base+'" y2="'+base+'" stroke="var(--line)"/><line x1="0" x2="'+W+'" y1="'+(base-(base-26)/2)+'" y2="'+(base-(base-26)/2)+T('" stroke="var(--line)" stroke-dasharray="2 3"/><text x="0" y="9">макс. ')+moneyR(mx)+'</text>'+g+t+'</svg>';
 }
 function monthsChart(m){
   const ms=[]; for(let i=5;i>=0;i--)ms.push(addMonths(m,-i)); const d=ms.map(x=>sums(x)); const mx=Math.max(1,...d.map(x=>Math.max(x.inc,x.exp)));
-  const W=340,base=100,slot=W/6; let g='';
-  d.forEach((x,i)=>{const hi=x.inc/mx*(base-14), he=x.exp/mx*(base-14), cx=i*slot+slot/2;
-    g+='<rect x="'+(cx-17)+'" y="'+(base-hi)+'" width="16" height="'+hi+'" rx="3" fill="var(--good)"/><rect x="'+(cx+1)+'" y="'+(base-he)+'" width="16" height="'+he+'" rx="3" fill="var(--bar)"/><text x="'+cx+'" y="115" text-anchor="middle">'+MN[Number(ms[i].slice(5))-1].slice(0,3)+'</text>'});
-  return T('<svg class="ch" viewBox="0 0 340 120" role="img" aria-label="Доходы и расходы за 6 месяцев"><line x1="0" x2="340" y1="')+base+'" y2="'+base+T('" stroke="var(--line)"/><text x="0" y="9">макс. ')+moneyR(mx)+'</text>'+g+T('</svg><div class="leg"><span><i style="background:var(--good)"></i>Доходы</span><span><i style="background:var(--bar)"></i>Расходы</span></div>');
+  const W=340,base=128,slot=W/6; let g='';
+  d.forEach((x,i)=>{const hi=x.inc/mx*(base-26), he=x.exp/mx*(base-26), cx=i*slot+slot/2;
+    g+='<rect x="'+(cx-17)+'" y="'+(base-hi)+'" width="16" height="'+hi+'" rx="3" fill="var(--good)"/><rect x="'+(cx+1)+'" y="'+(base-he)+'" width="16" height="'+he+'" rx="3" fill="var(--bar)"/><text x="'+cx+'" y="145" text-anchor="middle">'+MN[Number(ms[i].slice(5))-1].slice(0,3)+'</text>'});
+  return T('<svg class="ch" viewBox="0 0 340 150" role="img" aria-label="Доходы и расходы за 6 месяцев"><line x1="0" x2="340" y1="')+base+'" y2="'+base+T('" stroke="var(--line)"/><text x="0" y="9">макс. ')+moneyR(mx)+'</text>'+g+T('</svg><div class="leg"><span><i style="background:var(--good)"></i>Доходы</span><span><i style="background:var(--bar)"></i>Расходы</span></div>');
 }
 let pieSel=null;
 function pieChart(s,cats){
@@ -1340,16 +1340,16 @@ function vStats(m,s){
   const cats=Object.keys(s.byName).sort((a,b)=>s.byName[b]-s.byName[a]);
   h+=T('<section class="card g"><h3>Расходы по категориям</h3>')+(cats.length?pieChart(s,cats)+'<div>'+cats.map(id=>{const c=catInfo(id); const v=s.byName[id]; const p=v/s.exp*100;
     return '<div class="cr pr'+(pieSel===id?' on':'')+'" data-act="pie" data-id="'+id+'"><div class="l"><span class="dot" style="background:'+c.c+'"></span><span class="n">'+esc(c.n)+'</span><span class="v">'+money(v)+' <small>'+Math.round(p)+'%</small></span>'+(String(id).indexOf('c:')===0?'':'<button class="cmore" data-act="catone" data-v="bud" data-id="'+esc(id)+'" aria-label="'+T('Изменить')+'">⋯</button>')+'</div>'+bar(p,c.c)+'</div>'}).join('')+'</div>':T('<p class="empty">В этом периоде расходов нет</p>'))+'</section>';
-  h+=T('<section class="card"><h3>Расходы по дням</h3>')+dailyChart(m,s)+'</section>';
+  h+=T('<section class="card g"><h3>Расходы по дням</h3>')+dailyChart(m,s)+'</section>';
   if(s.inc>0&&mode==='p'){
     const need=s.byGroup.need/s.inc*100, want=s.byGroup.want/s.inc*100, save=Math.max(0,(s.inc-s.exp)/s.inc*100);
-    const row=(n,v,t,col,hint,over)=>'<div class="cr"><div class="l"><span class="n">'+n+'</span><span class="v">'+Math.round(v)+T('% <small>цель ')+t+'%</small></span></div>'+bar(v,col)+'<span class="mut" style="font-size:13px">'+hint+'</span></div>';
-    h+=T('<section class="card"><h3>Правило 50/30/20</h3>')+row(T('Обязательное'),need,50,need>50?'var(--warn)':'var(--bar)',T('Жильё, продукты, транспорт, здоровье, связь. ')+(need>50?T('Выше ориентира.'):T('В норме.')))
+    const row=(n,v,t,col,hint,over)=>'<div class="cr"><div class="l"><span class="n">'+n+'</span><span class="v">'+Math.round(v)+T('% <small>цель ')+t+'%</small></span></div>'+bar(v,col)+'<span class="mut" style="font-size:12.5px;line-height:1.4;opacity:.85">'+hint+'</span></div>';
+    h+=T('<section class="card g"><h3>Правило 50/30/20</h3>')+row(T('Обязательное'),need,50,need>50?'var(--warn)':'var(--bar)',T('Жильё, продукты, транспорт, здоровье, связь. ')+(need>50?T('Выше ориентира.'):T('В норме.')))
       +row(T('Желания'),want,30,want>30?'var(--warn)':'var(--bar)',T('Кафе, техника, развлечения, одежда, подарки. ')+(want>30?T('Выше ориентира.'):T('В норме.')))
       +row(T('Накопления'),save,20,save>=20?'var(--good)':'var(--warn)',T('Что осталось от дохода. ')+(save>=20?T('Цель достигнута.'):T('Не хватает ')+moneyR(Math.max(0,s.inc*.2-(s.inc-s.exp)))+T(' до цели.')))+'</section>';
   }
   if(mode==='b'||mode==='f')h+=clientsCard(s);
-  h+=T('<section class="card"><h3>Доходы и расходы, 6 периодов</h3>')+monthsChart(m)+'</section>';
+  h+=T('<section class="card g"><h3>Доходы и расходы, 6 периодов</h3>')+monthsChart(m)+'</section>';
   return h;
 }
 function vBudget(m,s){

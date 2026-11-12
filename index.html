@@ -278,6 +278,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .nw a{font-size:13px;font-weight:600;color:var(--accent-hi);text-decoration:none}
 .nm{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--faint)}
 .nm .tg{padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.1);color:var(--accent-hi);font-weight:600;letter-spacing:.02em}
+.clist{display:flex;flex-direction:column;gap:8px;margin-top:10px}.crow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line,rgba(255,255,255,.12));background:var(--card2,rgba(255,255,255,.04));color:inherit;font:inherit;cursor:pointer;text-align:left}.crow.on{border-color:var(--accent-hi,#6ee7a8)}.crow .cc{font-weight:700;letter-spacing:.06em;width:34px;opacity:.7}.crow .cn{flex:1;font-weight:600}.crow .cu2{opacity:.7}
 </style>
 </head>
 <body>
@@ -357,11 +358,122 @@ const MODES=['p','b','f'];
 const isSav=t=>t.t==='e'&&t.cat==='savings';
 /* Латвия 2026 (VID): VSAOI 31,07% с базы от 780 € + 10% с остатка прибыли; IIN 25,5% до 105 300 € в год, 33% выше; необлагаемый минимум 550 € в месяц; MUN 25% с оборота, лимит 50 000 € */
 const LV={minBase:780,full:.3107,pens:.10,iin:.255,iinHi:.33,iinLim:105300,ntm:550,mun:.25,munLim:50000};
+/* ---------- страны: профили налогов на 2026 год ---------- */
+const TAX_CHECKED='2026-11-12';
+const clamp0=x=>x>0?x:0;
+const brk=(x,b)=>{let t=0,lo=0;for(const [hi,r] of b){if(x>lo)t+=(Math.min(x,hi)-lo)*r;lo=hi;if(x<=hi)break}return t};
+const annT=(f,x,n)=>n>0?f(x*12/n)*n/12:0;
+const pcs=x=>String(Math.round(x*10000)/100).replace('.',',')+'%';
+const estDE=x=>{const z1=12348,z2=17799,z3=69878,z4=277825;
+  if(x<=z1)return 0;
+  if(x<=z2){const t=x-z1,L=z2-z1;return .14*t+.10/(2*L)*t*t}
+  const b2=.14*(z2-z1)+.05*(z2-z1);
+  if(x<=z3){const t=x-z2,L=z3-z2;return b2+.24*t+.18/(2*L)*t*t}
+  const b3=b2+.24*(z3-z2)+.09*(z3-z2);
+  if(x<=z4)return b3+.42*(x-z3);
+  return b3+.42*(z4-z3)+.45*(x-z4)};
+const soliDE=t=>t>20350?Math.min(.055*t,.119*(t-20350)):0;
+const gpmLT=A=>{if(A<=20000)return .05*A; if(A<=42500)return 1000+(A-20000)*(7500/22500);
+  return 8500+(Math.min(A,82962)-42500)*.2+(Math.max(0,Math.min(A,138270)-82962))*.25+clamp0(A-138270)*.32};
+const itGB=A=>{const pa=clamp0(12570-clamp0((A-100000)/2)), t=clamp0(A-pa); return .2*Math.min(t,37700)+.4*clamp0(Math.min(t,125140)-37700)+.45*clamp0(t-125140)};
+const fedUS=x=>brk(x,[[12400,.10],[50400,.12],[105700,.22],[201775,.24],[256225,.32],[640600,.35],[Infinity,.37]]);
+const COUNTRIES={
+ LV:{name:'Латвия',cur:'€',src:['VID','https://www.vid.gov.lv'],
+  se:{regs:[{id:'lv',name:'Обычный'},{id:'mun',name:'Микропредприятие'}],vat:{rate:.21,thr:50000}},
+  firm:{mode:'dist',cit:.20,divTax:0,alt:{cit:.15,pit:.06},er:.2359,ee:.105,pit:.255,ntm:550,vat:.21,vatLim:50000,
+   dl:yr=>[['До 17-го каждого месяца','Отчёт по зарплатам и взносам, оплата до 23-го'],['До 20-го','Декларация НДС за прошлый месяц, оплата до 23-го'],['После выплаты дивидендов','Налог на распределённую прибыль: срок и форму уточните в VID'],['До 31 мая '+(yr+1),'Годовой отчёт за '+yr]]}},
+ EE:{name:'Эстония',cur:'€',src:['EMTA','https://www.emta.ee'],
+  se:{regs:[{id:'fie',name:'FIE',socL:'Социальный налог 33%',incL:'Подоходный налог 22%',
+    desc:'Эстония, самозанятый (FIE): подоходный налог 22% с прибыли (необлагаемый минимум 700 € в месяц) и социальный налог 33% с прибыли, не меньше 292,38 € в месяц.'}],
+   calc:(r,Y)=>{const p=clamp0(Y.profit); const base=p>0?Math.min(Math.max(p,886*Y.n),8860*Y.n):0; return {soc:.33*base,inc:.22*clamp0(p-700*Y.n)}},
+   vat:{rate:.24,thr:40000},
+   dl:()=>[['До 15 марта, июня, сентября, декабря','Авансовые платежи по социальному налогу (раз в квартал)'],['До 30 апреля','Годовая декларация о доходах за прошлый год'],['До 20-го числа','Декларация по НДС за прошлый месяц, если вы плательщик']]},
+  firm:{mode:'dist',cit:.22,divTax:0,er:.338,ee:.036,pit:.22,ntm:700,vat:.24,vatLim:40000,
+   dl:yr=>[['До 10-го каждого месяца','Форма TSD: налоги и взносы с зарплат'],['До 20-го','Декларация НДС (KMD) за прошлый месяц'],['После выплаты дивидендов','Налог 22/78 вносится вместе с декларацией TSD'],['До 30 июня '+(yr+1),'Годовой отчёт за '+yr]]}},
+ LT:{name:'Литва',cur:'€',src:['VMI','https://www.vmi.lt'],
+  se:{regs:[{id:'ia',name:'Индивид. деятельность',socL:'Sodra (VSD + PSD) 19,5%',incL:'Подоходный налог (GPM)',lim:{v:45000,per:'год',name:'Лимит дохода индивидуальной деятельности'},
+    desc:'Литва, индивидуальная деятельность: расходы по факту или 30% дохода без чеков. Налог около 5% с первых 20 000 € прибыли, дальше растёт до 20–32%. Взносы Sodra 19,5% с 90% прибыли.'}],
+   calc:(r,Y)=>{const ded=Math.max(Y.opex,.3*Y.inc), t=clamp0(Y.inc-ded), base=.9*t; return {soc:.1252*Math.min(base,99422*Y.n/12)+.0698*base,inc:annT(gpmLT,t,Y.n)}},
+   vat:{rate:.21,thr:45000},
+   dl:()=>[['До 15-го числа','Взносы Sodra за прошлый месяц'],['До 1 мая','Годовая декларация о доходах за прошлый год'],['До 25-го числа','Декларация по НДС, если вы плательщик']]},
+  firm:{mode:'flat',cit:.17,citF:Y=>Y.inc<=300000?.07:.17,divTax:.15,er:.0177,ee:.195,pit:.20,ntm:0,vat:.21,vatLim:45000,note:'Ставка 7% действует для малых компаний с доходом до 300 000 €, в первые два года возможно 0%.',
+   dl:yr=>[['До 15-го каждого месяца','Взносы Sodra и налог с зарплат'],['До 25-го','Декларация НДС за прошлый месяц'],['До 15 июня '+(yr+1),'Налог на прибыль и годовая отчётность за '+yr]]}},
+ PL:{name:'Польша',cur:'zł',src:['KAS','https://www.podatki.gov.pl'],
+  se:{regs:[
+   {id:'ryc',name:'Ryczałt',socL:'ZUS + здоровье',incL:'Налог ryczałt',param:{k:'pr',label:'Ставка ryczałt, %',def:12,hint:'Зависит от вида деятельности: например 12% для IT, 8,5% для многих услуг, 17% для свободных профессий.'},
+    desc:'Польша, ryczałt: налог с дохода без вычета расходов (ставка зависит от вида деятельности), социальные взносы ZUS и фиксированный взнос на здоровье по ступеням дохода.'},
+   {id:'lin',name:'Линейный 19%',socL:'ZUS + здоровье 4,9%',incL:'Налог 19%',desc:'Польша, линейный налог 19% с прибыли. Взнос на здоровье 4,9% дохода, не меньше минимума, плюс ZUS.'},
+   {id:'ska',name:'Шкала 12/32%',socL:'ZUS + здоровье 9%',incL:'Налог по шкале',desc:'Польша, налоговая шкала: 12% до 120 000 zł дохода в год и 32% выше, с необлагаемой суммой 30 000 zł. Взнос на здоровье 9%, плюс ZUS.'}],
+   calc:(r,Y,P)=>{const n=Y.n, soc=Y.inc>0?1926.76*n:0; let health=0,inc=0;
+    if(r==='ryc'){const rev=Y.inc*12/n; health=Y.inc>0?(rev<=60000?498.35:rev<=300000?830.58:1495.04)*n:0; inc=clamp0(Y.inc-soc-.5*health)*(P.pr/100)}
+    else if(r==='lin'){health=Y.inc>0?Math.max(.049*clamp0(Y.profit-soc),432.54*n):0; inc=.19*clamp0(Y.profit-soc-Math.min(health,11600*n/12))}
+    else{health=Y.inc>0?Math.max(.09*clamp0(Y.profit-soc),432.54*n):0; inc=annT(A=>clamp0(.12*Math.min(A,120000)-3600+.32*clamp0(A-120000)),clamp0(Y.profit-soc),n)}
+    return {soc:soc+health,inc}},
+   vat:{rate:.23,thr:200000},
+   dl:()=>[['До 10-го числа','Взносы ZUS'],['До 20-го числа','Авансы по налогу на доход'],['До 25-го числа','JPK_VAT, если вы плательщик НДС'],['До 30 апреля','Годовая декларация PIT за прошлый год']]},
+  firm:{mode:'flat',cit:.09,citF:Y=>Y.inc<=8500000?.09:.19,divTax:.19,er:.2048,ee:.2147,pit:.12,ntm:2750,vat:.23,vatLim:200000,note:'Ставка 9% для малых налогоплательщиков (выручка до ≈2 млн €), иначе 19%. Есть эстонская модель налога с распределённой прибыли.',
+   dl:yr=>[['До 15-го каждого месяца','Взносы ZUS за сотрудников'],['До 20-го','Налог с зарплат (PIT-4R) и авансы'],['До 25-го','JPK_VAT за прошлый месяц'],['До 31 марта '+(yr+1),'Годовая декларация CIT-8 за '+yr]]}},
+ DE:{name:'Германия',cur:'€',src:['Bundesfinanzministerium','https://www.bundesfinanzministerium.de'],
+  se:{regs:[{id:'est',name:'Einkommensteuer',socL:'Страхование (оценка)',incL:'Подоходный налог',param:{k:'sp',label:'Страхование, % от прибыли',def:15,hint:'Медицинская и пенсионная страховка зависят от вашего статуса. Укажите свою долю от прибыли.'},
+    desc:'Германия, фрилансер или Gewerbe: подоходный налог по прогрессивной шкале 14–45% (необлагаемый минимум 12 348 €) с прибыли после страховки. Торговый налог Gewerbesteuer не включён.'}],
+   calc:(r,Y,P)=>{const soc=clamp0(Y.profit)*P.sp/100, A=Y.n>0?clamp0(Y.profit-soc)*12/Y.n:0, est=estDE(A); return {soc,inc:(est+soliDE(est))*Y.n/12}},
+   vat:{rate:.19,thr:25000,note:'Kleinunternehmer: оборот до 25 000 € за прошлый год и до 100 000 € в текущем'},
+   dl:()=>[['До 10-го числа','Предварительная декларация по НДС (Umsatzsteuer-Voranmeldung)'],['10 марта, июня, сентября, декабря','Авансы по подоходному налогу'],['До 31 июля','Годовая декларация за прошлый год']]},
+  firm:{mode:'flat',cit:.29825,divTax:.26375,er:.21,ee:.205,pit:.20,ntm:1029,vat:.19,vatLim:25000,note:'Ставка включает корпоративный налог 15% с надбавкой солидарности и торговый налог около 14% (зависит от коммуны). Дивиденды: 25% + надбавка.',
+   dl:yr=>[['До 10-го каждого месяца','Налог с зарплат, НДС и взносы'],['10 марта, июня, сентября, декабря','Авансы по корпоративному налогу'],['После окончания года','Годовая отчётность и декларации за '+yr]]}},
+ UA:{name:'Украина',cur:'₴',src:['ДПС','https://tax.gov.ua'],
+  se:{regs:[
+   {id:'g3_5',name:'3 группа, 5%',socL:'ЄСВ',incL:'Единый налог 5% + военный сбор 1%',lim:{v:10091049,per:'год',name:'Лимит дохода 3-й группы'},desc:'Украина, ФОП 3 группы без НДС: единый налог 5% с дохода, военный сбор 1% и фиксированный ЄСВ 1 902,34 грн в месяц.'},
+   {id:'g3_3',name:'3 группа, 3% (НДС)',socL:'ЄСВ',incL:'Единый налог 3% + военный сбор 1%',lim:{v:10091049,per:'год',name:'Лимит дохода 3-й группы'},desc:'Украина, ФОП 3 группы плательщик НДС: единый налог 3% с дохода плюс НДС отдельно, военный сбор 1%, ЄСВ 1 902,34 грн в месяц.'}],
+   calc:(r,Y)=>({soc:Y.inc>0?1902.34*Y.n:0,inc:(r==='g3_5'?.05:.03)*Y.inc+.01*Y.inc}),
+   vat:{rate:.20,thr:1000000},
+   dl:()=>[['Квартал + 40 дней','Декларация единого налога (3-я группа)'],['Ещё 10 дней','Оплата единого налога и военного сбора'],['До 20-го числа после квартала','Оплата ЄСВ за квартал']]},
+  firm:{mode:'flat',cit:.18,divTax:.10,er:.22,ee:.05,pit:.18,ntm:0,vat:.20,vatLim:1000000,note:'Для ТОВ на упрощённой системе вместо налога на прибыль единый налог 5% с дохода. Дивиденды: 5% налога и 5% военного сбора.',
+   dl:yr=>[['До 20-го числа','Декларация НДС за прошлый месяц'],['Ежеквартально','Отчёт по ЄСВ и налогам с зарплат'],['До 1 марта '+(yr+1),'Годовая декларация по налогу на прибыль за '+yr]]}},
+ KZ:{name:'Казахстан',cur:'₸',src:['КГД','https://kgd.gov.kz'],
+  se:{regs:[
+   {id:'snr',name:'ИП упрощёнка',socL:'ОПВ, СО, ВОСМС',incL:'Налог 4% с дохода',desc:'Казахстан, ИП на упрощённой декларации: ИПН 4% с дохода (местные власти могут менять ставку от 2% до 6%), плюс взносы за себя: ОПВ 10%, СО 5%, ВОСМС 5% с базы 1,4 МЗП в месяц.'},
+   {id:'se',name:'Самозанятый',socL:'Соцплатежи 4%',incL:'ИПН 0%',lim:{v:1297500,per:'месяц',name:'Лимит самозанятого'},desc:'Казахстан, самозанятый: подоходный налог 0%, соцплатежи 4% от дохода. Доход не должен превышать 300 МРП в месяц.'}],
+   calc:(r,Y)=>r==='snr'?{soc:Y.inc>0?(.10+.05+.05)*1.4*85000*Y.n:0,inc:.04*Y.inc}:{soc:.04*Y.inc,inc:0},
+   vat:{rate:.16,thr:43250000,note:'ИП на упрощёнке НДС не платят'},
+   dl:()=>[['До 25-го числа','Взносы за себя за прошлый месяц'],['15 февраля и 15 августа','Декларация 910 за полугодие'],['25 февраля и 25 августа','Оплата налога за полугодие']]},
+  firm:{mode:'flat',cit:.20,divTax:.10,er:.115,ee:.12,pit:.10,ntm:60550,vat:.16,vatLim:43250000,note:'Для малого бизнеса есть упрощённая декларация: 4% с дохода вместо налога на прибыль.',
+   dl:yr=>[['До 25-го числа','Взносы и налоги с зарплат'],['Раз в квартал','Декларация по НДС'],['До 31 марта '+(yr+1),'Годовая декларация по КПН за '+yr]]}},
+ GE:{name:'Грузия',cur:'₾',src:['Служба доходов','https://www.rs.ge'],
+  se:{regs:[
+   {id:'sbs',name:'Малый бизнес 1%',socL:'',incL:'Налог 1% с оборота',lim:{v:500000,per:'год',name:'Лимит малого бизнеса'},desc:'Грузия, ИП со статусом малого бизнеса: 1% с оборота до 500 000 ₾ в год, расходы не вычитаются, НДС платить не нужно.'},
+   {id:'ie20',name:'Общий 20%',socL:'',incL:'Налог 20% с прибыли',desc:'Грузия, ИП без статуса малого бизнеса: подоходный налог 20% с прибыли.'}],
+   calc:(r,Y)=>r==='sbs'?{soc:0,inc:.01*Math.min(Y.inc,500000)+.03*clamp0(Y.inc-500000)}:{soc:0,inc:.2*clamp0(Y.profit)},
+   vat:{rate:.18,thr:100000},
+   dl:()=>[['До 15-го числа','Декларация и оплата налога за прошлый месяц'],['До 15-го числа','Декларация НДС, если вы плательщик']]},
+  firm:{mode:'dist',cit:.15,divTax:.05,er:.02,ee:.02,pit:.20,ntm:0,vat:.18,vatLim:100000,note:'Налог 15% платится только при распределении прибыли, дивиденды облагаются ещё 5%.',
+   dl:yr=>[['До 15-го числа','Налоги и пенсионные взносы с зарплат, НДС'],['При выплате дивидендов','Налог на распределённую прибыль и 5% с дивидендов'],['До 1 апреля '+(yr+1),'Годовая отчётность за '+yr]]}},
+ GB:{name:'Великобритания',cur:'£',src:['HMRC','https://www.gov.uk/government/organisations/hm-revenue-customs'],
+  se:{regs:[{id:'sa',name:'Self Assessment',socL:'Взносы NIC (класс 4)',incL:'Подоходный налог',
+    desc:'Великобритания, самозанятый: подоходный налог 20/40/45% после личной льготы 12 570 £ (Англия, Уэльс, Северная Ирландия) и взносы NIC класса 4: 6% с прибыли от 12 570 до 50 270 £, 2% выше.'}],
+   calc:(r,Y)=>({soc:annT(A=>.06*clamp0(Math.min(A,50270)-12570)+.02*clamp0(A-50270),clamp0(Y.profit),Y.n),inc:annT(itGB,clamp0(Y.profit),Y.n)}),
+   vat:{rate:.20,thr:90000},
+   dl:()=>[['31 января','Онлайн-декларация и оплата налога за прошлый год'],['31 января и 31 июля','Авансовые платежи по налогу'],['5 апреля','Конец налогового года']]},
+  firm:{mode:'flat',cit:.25,citF:Y=>{const P=Y.profit; if(P<=50000)return .19; if(P>=250000)return .25; const t=.25*P-.015*(250000-P); return t/P},divTax:.1075,er:.15,erFree:417,ee:.08,eeFree:1048,pit:.20,ntm:1048,vat:.20,vatLim:90000,note:'Ставка 19% с прибыли до 50 000 £, 25% выше 250 000 £, между ними плавный переход. Дивиденды: 10,75% по базовой ставке после льготы 500 £.',
+   dl:yr=>[['До 22-го числа','Налоги и взносы с зарплат (PAYE)'],['Раз в квартал','Декларация НДС: через месяц и 7 дней после периода'],['9 месяцев и 1 день после конца года','Оплата корпоративного налога']]}},
+ US:{name:'США',cur:'$',src:['IRS','https://www.irs.gov'],
+  se:{regs:[{id:'sole',name:'Sole proprietor',socL:'Self-employment tax 15,3%',incL:'Федеральный подоходный налог',
+    desc:'США, самозанятый (Schedule C): налог на самозанятость 15,3% с 92,35% прибыли и федеральный подоходный налог по шкале 10–37% с вычетом половины SE tax, стандартного вычета 16 100 $ и QBI 20%. Налоги штата не включены.'}],
+   calc:(r,Y)=>{const p=clamp0(Y.profit), net=.9235*p, se=.124*Math.min(net,184500*Y.n/12)+.029*net, pre=clamp0(p-se/2), taxable=clamp0(pre-16100*Y.n/12), t2=taxable-.2*Math.min(pre,taxable); return {soc:se,inc:annT(fedUS,t2,Y.n)}},
+   vat:null,
+   dl:()=>[['15 апреля, 15 июня, 15 сентября, 15 января','Квартальные авансовые платежи (estimated taxes)'],['15 апреля','Годовая декларация (Form 1040, Schedule C)']]},
+  firm:{mode:'flat',cit:.21,divTax:.15,er:.0765,ee:.0765,pit:.12,ntm:1342,vat:0,vatLim:0,note:'Федеральный налог C-corporation 21%, налоги штата не включены. Дивиденды: 15% для большинства владельцев.',
+   dl:yr=>[['Ежеквартально','Форма 941: налоги и взносы с зарплат'],['15 апреля '+(yr+1),'Налоговая декларация корпорации за '+yr],['15 апреля, июня, сентября, декабря','Авансовые платежи корпоративного налога']]}}
+};
+const CC=()=>COUNTRIES[S.country]||COUNTRIES.LV;
+const FP=()=>CC().firm;
+const curReg=()=>{const ids=CC().se.regs.map(r=>r.id).concat('custom'); return ids.includes(S.biz.regime)?S.biz.regime:ids[0]};
+const regPar=r=>{const p={}; if(r&&r.param)p[r.param.k]=S.biz[r.param.k]!=null?S.biz[r.param.k]:r.param.def; return p};
 const listFor=(t,b)=>b==='f'?(t==='e'?FE:FI):b?(t==='e'?BE:BI):(t==='e'?CE:CI);
 const MN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MG=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const WD=['вс','пн','вт','ср','чт','пт','сб'];
-const CURS=['€','$','£','zł','₽','₴'];
+const CURS=['€','$','£','zł','₽','₴','₸','₾'];
 
 /* ---------- утилиты ---------- */
 const pad=n=>String(n).padStart(2,'0');
@@ -395,7 +507,7 @@ function dayTitle(d){
 }
 
 /* ---------- состояние ---------- */
-let S={tx:[],budget:{total:0,cats:{}},goals:[],fixed:[],cur:'€',demo:false,payday:5,biz:{regime:'lv',vsaoiBase:780,rate:6,base:'income'},firm:{vat:false,reg:'std',staff:0},plan:{b:false,f:false}};
+let S={tx:[],budget:{total:0,cats:{}},goals:[],fixed:[],cur:'€',demo:false,payday:5,country:'LV',cset:false,biz:{regime:'lv',vsaoiBase:780,rate:6,base:'income'},firm:{vat:false,reg:'std',staff:0},plan:{b:false,f:false}};
 let mode='p', curMonth=mk(todayStr()), view='home', hf='all', draft=null, editId=null;
 
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -457,7 +569,7 @@ async function flush(){
   if(!COL)return;
   try{
     for(const m of [...dirty]){ await COL.doc('tx-'+m).set({items:S.tx.filter(t=>mk(t.date)===m)}); dirty.delete(m); }
-    if(dirtyS){ await COL.doc('settings').set({budget:S.budget,goals:S.goals,cur:S.cur,demo:!!S.demo,payday:S.payday,biz:S.biz,firm:S.firm,plan:S.plan,fixed:S.fixed}); dirtyS=false; }
+    if(dirtyS){ await COL.doc('settings').set({country:S.country,cset:!!S.cset,budget:S.budget,goals:S.goals,cur:S.cur,demo:!!S.demo,payday:S.payday,biz:S.biz,firm:S.firm,plan:S.plan,fixed:S.fixed}); dirtyS=false; }
   }catch(e){console.warn('save failed',e)}
 }
 async function initDb(){
@@ -476,10 +588,10 @@ async function initDb(){
       COL=col;
       if(found){
         S.tx=items;
-        if(settings){S.budget=settings.budget||{total:0,cats:{}};S.goals=settings.goals||[];S.cur=settings.cur||'€';S.demo=!!settings.demo;S.payday=settings.payday||5;S.fixed=settings.fixed||[];S.biz=Object.assign({regime:'lv',vsaoiBase:780,rate:6,base:'income'},settings.biz||{});S.firm=Object.assign({vat:false,reg:'std',staff:0},settings.firm||{});S.plan=Object.assign({b:false,f:false},settings.plan||{});if(!settings.plan&&S.tx.some(t=>t.b&&!t.demo))S.plan.b=true;curMonth=periodOfDate(todayStr())}
-        persistLocal(); render();
+        if(settings){S.country=COUNTRIES[settings.country]?settings.country:'LV';S.cset=!!settings.cset;S.budget=settings.budget||{total:0,cats:{}};S.goals=settings.goals||[];S.cur=settings.cur||'€';S.demo=!!settings.demo;S.payday=settings.payday||5;S.fixed=settings.fixed||[];S.biz=Object.assign({regime:'lv',vsaoiBase:780,rate:6,base:'income'},settings.biz||{});S.firm=Object.assign({vat:false,reg:'std',staff:0},settings.firm||{});S.plan=Object.assign({b:false,f:false},settings.plan||{});if(!settings.plan&&S.tx.some(t=>t.b&&!t.demo))S.plan.b=true;curMonth=periodOfDate(todayStr())}
+        persistLocal(); render(); maybeAskCountry();
       }else{
-        S.tx.forEach(t=>dirty.add(mk(t.date))); dirtyS=true; flush();
+        S.tx.forEach(t=>dirty.add(mk(t.date))); dirtyS=true; flush(); maybeAskCountry();
       }
     };
     unsub=col.onSnapshot(handle,e=>console.warn(e));
@@ -868,19 +980,20 @@ function fundGoal(id){
 const NEWS_UPDATED='2026-11-12';
 const NEWS=[
  {tag:'Ставки',date:'2026-10-29',title:'ЕЦБ оставил ставки без изменений',text:'Депозитная ставка остаётся 2,50% после сентябрьского повышения. Регулятор опасается, что подорожавшая энергия подтолкнёт инфляцию. Кристин Лагард объявила, что покинет пост президента ЕЦБ 7 февраля 2027 года. Для вас это значит: ставки по вкладам и кредитам с плавающей ставкой пока не должны резко меняться.',src:'Cyprus Mail',url:'https://cyprus-mail.com/2026/10/29/ecb-holds-interest-rates-steady-as-energy-shock-threatens-inflation-and-growth'},
- {tag:'Налоги',date:'2026-10-15',title:'С 2027 года необлагаемый минимум в Латвии вырастет до 570 €',text:'Сейчас вычет составляет 550 € в месяц, с 2027 года будет 570 €. Это уже закреплено в законе. Ставки подоходного налога остаются прежними: 25,5% до 105 300 € в год и 33% выше. Экономия небольшая, около 5 € в месяц.',src:'TaxRavens',url:'https://taxravens.com/en/latvia/tax-changes'},
- {tag:'Самозанятым',date:'2026-10-15',title:'С 1 апреля 2027 года появится новый налог для небольшой подработки',text:'Закон вводит начальный налог микропредприятия по ставке 10% для небольшого побочного дохода. Разъяснения VID ожидаются до 1 апреля 2027 года. Если у вас небольшие доходы от съёмок или услуг, следите за условиями и порогами.',src:'TaxRavens',url:'https://taxravens.com/en/latvia/tax-changes'},
- {tag:'Самозанятым',date:'2026-04-16',title:'Минимальные взносы 2 340 € в квартал для самозанятых отменены',text:'Поправка от 16 апреля действует с 1 января 2026 года. Социальные взносы теперь считаются с фактической прибыли каждого месяца, а не с минимальной базы. Отчёты подаются до 17-го числа после квартала, платежи вносятся до 23-го.',src:'TaxRavens',url:'https://taxravens.com/ru/latvia/self-employed'},
- {tag:'Инвестиции',date:'2026-10-15',title:'Сейм принял правила для криптоактивов',text:'Режим инвестиционных счетов распространили на криптовалюты. Кроме того, предусмотрено разовое декларирование: налог 10% от рыночной стоимости на 31 декабря 2026 года, после чего эта стоимость становится базой для будущих расчётов. Правительству поручено до 30 декабря утвердить требования к поставщикам таких счетов.',src:'Incrypted',url:'https://incrypted.com/?p=401468'},
- {tag:'Цены',date:'2026-07-01',title:'Сниженный НДС 12% на базовые продукты действует до 30 июня 2027',text:'Пониженная ставка применяется к молоку, хлебу, курице, яйцам и ряду других основных продуктов. Мера введена в бюджете 2026 года, чтобы смягчить рост цен.',src:'Orbitax',url:'https://orbitax.com/news/country/article/Latvian-Parliament-Adopts-Stat-60581'},
- {tag:'Цены',date:'2026-10-21',title:'Цены производителей в Латвии ускорили рост',text:'В сентябре цены производителей выросли на 3,1% за год, против 2,7% месяцем ранее. Такие изменения обычно с задержкой доходят до цен в магазинах.',src:'Trading Economics',url:'https://tradingeconomics.com/latvia/producer-prices-change/news/593822'}
+ {cc:'LV',tag:'Налоги',date:'2026-10-15',title:'С 2027 года необлагаемый минимум в Латвии вырастет до 570 €',text:'Сейчас вычет составляет 550 € в месяц, с 2027 года будет 570 €. Это уже закреплено в законе. Ставки подоходного налога остаются прежними: 25,5% до 105 300 € в год и 33% выше. Экономия небольшая, около 5 € в месяц.',src:'TaxRavens',url:'https://taxravens.com/en/latvia/tax-changes'},
+ {cc:'LV',tag:'Самозанятым',date:'2026-10-15',title:'С 1 апреля 2027 года появится новый налог для небольшой подработки',text:'Закон вводит начальный налог микропредприятия по ставке 10% для небольшого побочного дохода. Разъяснения VID ожидаются до 1 апреля 2027 года. Если у вас небольшие доходы от съёмок или услуг, следите за условиями и порогами.',src:'TaxRavens',url:'https://taxravens.com/en/latvia/tax-changes'},
+ {cc:'LV',tag:'Самозанятым',date:'2026-04-16',title:'Минимальные взносы 2 340 € в квартал для самозанятых отменены',text:'Поправка от 16 апреля действует с 1 января 2026 года. Социальные взносы теперь считаются с фактической прибыли каждого месяца, а не с минимальной базы. Отчёты подаются до 17-го числа после квартала, платежи вносятся до 23-го.',src:'TaxRavens',url:'https://taxravens.com/ru/latvia/self-employed'},
+ {cc:'LV',tag:'Инвестиции',date:'2026-10-15',title:'Сейм принял правила для криптоактивов',text:'Режим инвестиционных счетов распространили на криптовалюты. Кроме того, предусмотрено разовое декларирование: налог 10% от рыночной стоимости на 31 декабря 2026 года, после чего эта стоимость становится базой для будущих расчётов. Правительству поручено до 30 декабря утвердить требования к поставщикам таких счетов.',src:'Incrypted',url:'https://incrypted.com/?p=401468'},
+ {cc:'LV',tag:'Цены',date:'2026-07-01',title:'Сниженный НДС 12% на базовые продукты действует до 30 июня 2027',text:'Пониженная ставка применяется к молоку, хлебу, курице, яйцам и ряду других основных продуктов. Мера введена в бюджете 2026 года, чтобы смягчить рост цен.',src:'Orbitax',url:'https://orbitax.com/news/country/article/Latvian-Parliament-Adopts-Stat-60581'},
+ {cc:'LV',tag:'Цены',date:'2026-10-21',title:'Цены производителей в Латвии ускорили рост',text:'В сентябре цены производителей выросли на 3,1% за год, против 2,7% месяцем ранее. Такие изменения обычно с задержкой доходят до цен в магазинах.',src:'Trading Economics',url:'https://tradingeconomics.com/latvia/producer-prices-change/news/593822'}
 ];
 let newsF='all';
 const dRu=d=>{const [y,m,dd]=d.split('-'); return +dd+' '+['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][+m-1]+' '+y};
 function vNews(){
-  const tags=['all'].concat([...new Set(NEWS.map(n=>n.tag))]);
-  const list=NEWS.filter(n=>newsF==='all'||n.tag===newsF).sort((a,b)=>b.date.localeCompare(a.date));
-  return '<section class="card"><h3>Новости</h3><p class="mut" style="font-size:13px">Финансы, налоги и цены в Латвии. Подборка обновлена '+dRu(NEWS_UPDATED)+'. Это не налоговая консультация.</p>'
+  const NL=NEWS.filter(n=>!n.cc||n.cc===S.country);
+  const tags=['all'].concat([...new Set(NL.map(n=>n.tag))]);
+  const list=NL.filter(n=>newsF==='all'||n.tag===newsF).sort((a,b)=>b.date.localeCompare(a.date));
+  return '<section class="card"><h3>Новости</h3><p class="mut" style="font-size:13px">Финансы, налоги и цены. Страна: '+esc(CC().name)+(S.country==='LV'?'':'. Новости по вашей стране появятся позже, пока показаны общие')+'. Подборка обновлена '+dRu(NEWS_UPDATED)+'. Это не налоговая консультация.</p>'
    +'<div class="chips" style="margin-top:6px">'+tags.map(t=>'<button class="chip'+(newsF===t?' on':'')+'" data-act="nf" data-v="'+esc(t)+'">'+(t==='all'?'Все':esc(t))+'</button>').join('')+'</div></section>'
    +list.map(n=>'<section class="card g nw"><div class="nm"><span class="tg">'+esc(n.tag)+'</span><span>'+dRu(n.date)+'</span></div><h4>'+esc(n.title)+'</h4><p>'+esc(n.text)+'</p><a href="'+esc(n.url)+'" target="_blank" rel="noopener noreferrer">Источник: '+esc(n.src)+' ↗</a></section>').join('');
 }
@@ -968,7 +1081,9 @@ const lvVsaoi=profit=>{
 const iinCum=(profitCum,vsaoiCum,n)=>{const t=Math.max(0,profitCum-vsaoiCum-(S.biz.minUsed?0:LV.ntm*n)); return t<=LV.iinLim?t*LV.iin:LV.iinLim*LV.iin+(t-LV.iinLim)*LV.iinHi};
 function bizMonth(key){const x=sums(key); const paid=x.byCat.tax||0; const opex=x.exp-paid; return {inc:x.inc,opex,profit:x.inc-opex,paid}}
 function taxModel(m,reg){
-  reg=reg||S.biz.regime; const yr=m.slice(0,4), rows=[]; let cp=0,cv=0,cinc=0,cpaid=0,prev=0,n=0,due=0;
+  reg=reg||curReg();
+  if(S.country!=='LV'&&reg!=='custom')return taxModelG(m,reg);
+  const yr=m.slice(0,4), rows=[]; let cp=0,cv=0,cinc=0,cpaid=0,prev=0,n=0,due=0;
   for(let k=1;k<=12;k++){
     const key=yr+'-'+pad(k); if(key>m)break; n++;
     const b=bizMonth(key); cinc+=b.inc; cp+=b.profit; cpaid+=b.paid;
@@ -980,7 +1095,7 @@ function taxModel(m,reg){
   }
   return {rows,cur:rows[rows.length-1],ytd:{inc:cinc,profit:cp,paid:cpaid,due:reg==='lv'?cv+prev:due,vs:cv,iin:prev}};
 }
-const regName=()=>({lv:'IIN + VSAOI',mun:'MUN 25%',custom:'ставка '+S.biz.rate+'%'}[S.biz.regime]);
+const regName=()=>{const R=curReg(); if(R==='custom')return 'ставка '+S.biz.rate+'%'; if(S.country!=='LV')return CC().se.regs.find(r=>r.id===R).name; return {lv:'IIN + VSAOI',mun:'MUN 25%'}[R]};
 function taxCard(m,s){
   const c=taxModel(m).cur, net=c.inc-c.opex-c.due;
   return '<section class="card"><div class="hd"><h3>Налоги за месяц</h3><button class="link" data-act="tab" data-v="budget">Подробнее</button></div><div class="hd"><b class="tsum">Отложить '+money(c.due)+'</b><span class="mut">'+regName()+'</span></div>'+bar(c.inc?c.due/c.inc*100:0,'var(--bar)')+'<p class="mut">'+(c.inc?Math.round(c.due/c.inc*100)+'% от дохода. ':'')+'На руки после расходов и налогов: '+money(net)+'.</p></section>';
@@ -992,13 +1107,14 @@ function clientsCard(s){
 }
 function bizInsights(m,s){
   if(!s.list.length)return [{tone:'info',title:'Пока пусто',text:'Добавьте первый доход или расход кнопкой «+». Налоги и прибыль посчитаются сами.'}];
-  const out=[], M=taxModel(m), c=M.cur, R=S.biz.regime, net=c.inc-c.opex-c.due;
+  const out=[], M=taxModel(m), c=M.cur, R=curReg(), net=c.inc-c.opex-c.due, LVc=S.country==='LV', rgG=!LVc&&CC().se.regs.find(r=>r.id===R);
   if(c.due>0){
-    const txt=R==='lv'?'Соцвзносы '+money(c.vs)+' и подоходный налог '+money(c.ii)+'.':R==='mun'?'25% с оборота, это единый налог.':'Ставка '+S.biz.rate+'%.';
+    const txt=rgG?(rgG.socL?'Взносы '+money(c.vs)+' и налог '+money(c.ii)+'.':'Налог '+money(c.ii)+'.'):R==='lv'?'Соцвзносы '+money(c.vs)+' и подоходный налог '+money(c.ii)+'.':R==='mun'?'25% с оборота, это единый налог.':'Ставка '+S.biz.rate+'%.';
     out.push({tone:'warn',title:'Отложите '+money(c.due)+' на налоги',text:txt+(c.inc?' Это '+Math.round(c.due/c.inc*100)+'% дохода.':'')});
   }
-  if(R==='lv'&&c.profit>0&&c.profit<LV.minBase)out.push({tone:'good',title:'Прибыль меньше 780 €',text:'Платите только 10% в пенсию, без полной ставки 31,07%.'});
-  if(R==='mun'&&M.ytd.inc>=LV.munLim*.8)out.push({tone:M.ytd.inc>LV.munLim?'bad':'warn',title:'Оборот '+Math.round(M.ytd.inc/LV.munLim*100)+'% от лимита MUN',text:'Лимит микропредприятия '+moneyR(LV.munLim)+' в год. При превышении нужен другой режим.'});
+  if(LVc&&R==='lv'&&c.profit>0&&c.profit<LV.minBase)out.push({tone:'good',title:'Прибыль меньше 780 €',text:'Платите только 10% в пенсию, без полной ставки 31,07%.'});
+  if(!LVc)seLimitInsights(M,c).forEach(x=>out.push(x));
+  if(LVc&&R==='mun'&&M.ytd.inc>=LV.munLim*.8)out.push({tone:M.ytd.inc>LV.munLim?'bad':'warn',title:'Оборот '+Math.round(M.ytd.inc/LV.munLim*100)+'% от лимита MUN',text:'Лимит микропредприятия '+moneyR(LV.munLim)+' в год. При превышении нужен другой режим.'});
   const gap=M.ytd.due-M.ytd.paid; if(gap>1)out.push({tone:'info',title:'Держите отложенным '+moneyR(gap),text:'Начислено с начала года '+moneyR(M.ytd.due)+', уплачено '+moneyR(M.ytd.paid)+'.'});
   if(s.inc>0){const mg=net/s.inc*100; out.push({tone:mg<20?'warn':'good',title:'Чистая маржа '+Math.round(mg)+'%',text:'После расходов и налогов остаётся '+money(net)+' из '+money(s.inc)+'.'})}
   else if(m===periodOfDate(todayStr()))out.push({tone:'info',title:'Доходов пока нет',text:'Добавьте поступления, и здесь появятся налоги и маржа.'});
@@ -1011,8 +1127,8 @@ function bizInsights(m,s){
 const TEST_UNLOCK=true;            /* пока нет платёжной системы: тестовое включение без оплаты. Для релиза поставьте false и заполните PAY */
 const PAY={b:'',f:''};             /* ссылки на оплату (Stripe Payment Link и т.п.) */
 const PLANS={
-  b:{name:'Самозанятый',price:'2,99 €',feat:['Налоги самозанятого: взносы и подоходный налог или микропредприятие','Доходы по клиентам и чистая маржа','Напоминания о платежах и голосовой ввод']},
-  f:{name:'Фирма',price:'4,99 €',feat:['Открывает всё приложение, включая счёт «Самозанятый»','Налоги SIA: налог на распределённую прибыль и дивиденды','Зарплаты, взносы работодателя и НДС','Календарь отчётов и платежей, сроки VID']}
+  b:{name:'Самозанятый',price:'2,99 €',feat:['Налоги самозанятого по правилам вашей страны: взносы и подоходный налог','Доходы по клиентам и чистая маржа','Напоминания о платежах и голосовой ввод']},
+  f:{name:'Фирма',price:'4,99 €',feat:['Открывает всё приложение, включая счёт «Самозанятый»','Налоги фирмы: налог на прибыль и дивиденды','Зарплаты, взносы работодателя и НДС','Календарь отчётов и платежей вашей страны']}
 };
 const locked=md=>md!=='p'&&!S.plan[md]&&!S.plan.f;
 function planBlock(k,main){
@@ -1026,8 +1142,9 @@ function paywallCard(k){
 }
 function openPaywall(k){ sheet(paywallCard(k).replace('class="card pw"','class="pw" style="padding:0;display:flex;flex-direction:column;gap:12px"')+'<div class="btns"><button class="btn ghost" data-act="close">Закрыть</button></div>') }
 
-/* ---------- фирма (SIA), Латвия 2026 ---------- */
-const LF={cit:.20,citAlt:.15,pit:.06,er:.2359,ee:.105,iin:.255,ntm:550,vat:.21,vatLim:50000};
+/* ---------- фирма и самозанятый: расчёты по профилю страны ---------- */
+/* ---------- фирма: расчёты по профилю страны ---------- */
+const FIRM_VAT_CATS=['fe_rent','fe_soft','fe_ads','fe_sub','fe_gear','fe_other'];
 function firmMonth(key){
   return withMode('f',()=>{
     const x=sums(key), by=x.byCat, pay=by.fe_pay||0, tax=by.tax||0, div=by.div||0, opex=x.exp-pay-tax-div;
@@ -1037,52 +1154,130 @@ function firmMonth(key){
 function firmYear(m){
   const yr=m.slice(0,4), t={inc:0,pay:0,tax:0,div:0,opex:0,profit:0,vatOpex:0};
   for(let k=1;k<=12;k++){const key=yr+'-'+pad(k); if(key>m)break; const r=firmMonth(key); for(const q in r)t[q]=(t[q]||0)+r[q];
-    t.vatOpex+=withMode('f',()=>{const b=sums(key).byCat; return ['fe_rent','fe_soft','fe_ads','fe_sub','fe_gear','fe_other'].reduce((a,c)=>a+(b[c]||0),0)})}
+    t.vatOpex+=withMode('f',()=>{const b=sums(key).byCat; return FIRM_VAT_CATS.reduce((a,c)=>a+(b[c]||0),0)})}
   return t;
 }
+function firmVatIn(m){const v=FP().vat||0; return withMode('f',()=>{const b=sums(m).byCat; return FIRM_VAT_CATS.reduce((a,c)=>a+(b[c]||0),0)*v/(1+v)})}
 function firmCalc(m){
-  const c=firmMonth(m), Y=firmYear(m), n=S.firm.staff||0;
-  const erc=c.pay*LF.er, eec=c.pay*LF.ee, iin=Math.max(0,(c.pay-eec-LF.ntm*n)*LF.iin);
-  const vatOut=S.firm.vat?c.inc*LF.vat/(1+LF.vat):0, vatIn=S.firm.vat?firmVatIn(m):0, vat=Math.max(0,vatOut-vatIn);
-  const free=Math.max(0,Y.profit-Y.div*(1+LF.cit/(1-LF.cit)));
-  return {c,Y,erc,eec,iin,vatOut,vatIn,vat,free,
-    std:{cit:free*LF.cit,net:free*(1-LF.cit)},
-    alt:{cit:free*LF.citAlt,net:free*(1-LF.citAlt)*(1-LF.pit)}};
+  const P=FP(), c=firmMonth(m), Y=firmYear(m), n=S.firm.staff||0, vr=P.vat||0;
+  const erc=clamp0(c.pay-(P.erFree||0)*n)*P.er, eec=clamp0(c.pay-(P.eeFree||0)*n)*P.ee;
+  const iin=clamp0(c.pay-eec-P.ntm*n)*P.pit;
+  const on=S.firm.vat&&vr>0, vatOut=on?c.inc*vr/(1+vr):0, vatIn=on?firmVatIn(m):0, vat=clamp0(vatOut-vatIn);
+  const cit=P.citF?P.citF(Y):P.cit;
+  let free,std,alt=null;
+  if(P.mode==='dist'){
+    free=clamp0(Y.profit-Y.div*(1+cit/(1-cit)));
+    std={cit:free*cit,net:free*(1-cit)*(1-(P.divTax||0))};
+    if(P.alt)alt={cit:free*P.alt.cit,net:free*(1-P.alt.cit)*(1-P.alt.pit)};
+  }else{
+    const citY=clamp0(Y.profit)*cit; free=clamp0(Y.profit-citY-Y.div);
+    std={cit:citY,net:free*(1-(P.divTax||0))};
+  }
+  return {c,Y,erc,eec,iin,vatOut,vatIn,vat,free,cit,std,alt,P};
 }
-function firmVatIn(m){return withMode('f',()=>{const b=sums(m).byCat; return ['fe_rent','fe_soft','fe_ads','fe_sub','fe_gear','fe_other'].reduce((a,c)=>a+(b[c]||0),0)*LF.vat/(1+LF.vat)})}
 function firmCard(m){
   const F=firmCalc(m), due=F.erc+F.iin+F.eec+F.vat;
-  return '<section class="card"><div class="hd"><h3>Налоги и взносы за месяц</h3><button class="link" data-act="tab" data-v="budget">Подробнее</button></div><div class="hd"><b class="tsum">К оплате ≈ '+money(due)+'</b><span class="mut">оценка</span></div><p class="mut">Взносы работодателя '+money(F.erc)+(S.firm.vat?', НДС '+money(F.vat):'')+'. Свободная прибыль для дивидендов с начала года: '+money(F.free)+'.</p></section>';
+  return '<section class="card"><div class="hd"><h3>Налоги и взносы за месяц</h3><button class="link" data-act="tab" data-v="budget">Подробнее</button></div><div class="hd"><b class="tsum">К оплате ≈ '+money(due)+'</b><span class="mut">оценка</span></div><p class="mut">Взносы работодателя '+money(F.erc)+(S.firm.vat&&F.P.vat?', НДС '+money(F.vat):'')+'. Свободная прибыль для дивидендов с начала года: '+money(F.free)+'.</p></section>';
 }
 function firmInsights(m,s){
   if(!s.list.length)return [{tone:'info',title:'Пока пусто',text:'Добавьте выручку и расходы кнопкой «+». Налоги и свободная прибыль посчитаются сами.'}];
-  const F=firmCalc(m), out=[];
-  if(F.free>0)out.push({tone:'good',title:'Можно выплатить ≈ '+moneyR(F.std.net)+' дивидендов',text:'Свободная прибыль '+moneyR(F.free)+'. Налог на распределённую прибыль ≈ '+moneyR(F.std.cit)+'.'});
+  const F=firmCalc(m), P=F.P, out=[];
+  if(F.free>0)out.push({tone:'good',title:'Можно выплатить ≈ '+moneyR(F.std.net)+' дивидендов',text:'Свободная прибыль '+moneyR(F.free)+'. '+(P.mode==='dist'?'Налог на распределённую прибыль ≈ '+moneyR(F.std.cit)+'.':'Налог на прибыль с начала года ≈ '+moneyR(F.std.cit)+'.')});
   else if(F.Y.profit<=0)out.push({tone:'warn',title:'Прибыли с начала года нет',text:'Дивиденды выплачивать пока не из чего.'});
-  const lim=F.Y.inc/LF.vatLim*100;
-  if(!S.firm.vat&&lim>=70)out.push({tone:lim>=100?'bad':'warn',title:'Оборот '+Math.round(lim)+'% от порога НДС',text:'При обороте свыше '+moneyR(LF.vatLim)+' за 12 месяцев нужна регистрация плательщиком НДС.'});
+  if(P.vat&&P.vatLim){const lim=F.Y.inc/P.vatLim*100;
+    if(!S.firm.vat&&lim>=70)out.push({tone:lim>=100?'bad':'warn',title:'Оборот '+Math.round(lim)+'% от порога НДС',text:'При обороте свыше '+moneyR(P.vatLim)+' нужна регистрация плательщиком НДС.'})}
   if(s.inc>0){const mg=F.c.profit/s.inc*100; out.push({tone:mg<10?'warn':'good',title:'Маржа фирмы '+Math.round(mg)+'%',text:'Прибыль месяца '+money(F.c.profit)+' из выручки '+money(s.inc)+'.'})}
-  if(F.c.pay>0)out.push({tone:'info',title:'Зарплаты обходятся дороже на '+money(F.erc),text:'Взносы работодателя 23,59% идут сверх начисленной зарплаты.'});
+  if(F.c.pay>0&&F.erc>0)out.push({tone:'info',title:'Зарплаты обходятся дороже на '+money(F.erc),text:'Взносы работодателя '+pcs(P.er)+' идут сверх начисленной зарплаты.'});
   return out.slice(0,4);
 }
 function vFirm(m,s){
-  const F=firmCalc(m), c=F.c, Y=F.Y, mo=Number(m.slice(5)), yr=Number(m.slice(0,4)), nx=mo===12?1:mo+1, ny=mo===12?yr+1:yr;
+  const F=firmCalc(m), P=F.P, cc=CC(), c=F.c, Y=F.Y, yr=Number(m.slice(0,4));
   const kv=(a,b,st,hint)=>'<div class="kv'+(st?' strong':'')+'"><span>'+a+(hint?'<small>'+hint+'</small>':'')+'</span><b>'+money(b)+'</b></div>';
-  let h='<section class="card"><div class="hd"><h3>Настройки фирмы</h3></div><div class="kv"><span>Плательщик НДС<small>Суммы считаются с НДС 21%</small></span></div><div class="chips"><button class="chip'+(S.firm.vat?'':' on')+'" data-act="fvat" data-v="0">Нет</button><button class="chip'+(S.firm.vat?' on':'')+'" data-act="fvat" data-v="1">Да</button></div><div class="kv"><span>Сотрудников<small>Для оценки налога с зарплат</small></span><button class="link" data-act="fstaff">'+(S.firm.staff||0)+'</button></div></section>';
+  let h='<section class="card"><div class="hd"><h3>Настройки фирмы</h3></div>';
+  if(P.vat)h+='<div class="kv"><span>Плательщик НДС<small>Суммы считаются с НДС '+pcs(P.vat)+'</small></span></div><div class="chips"><button class="chip'+(S.firm.vat?'':' on')+'" data-act="fvat" data-v="0">Нет</button><button class="chip'+(S.firm.vat?' on':'')+'" data-act="fvat" data-v="1">Да</button></div>';
+  h+='<div class="kv"><span>Сотрудников<small>Для оценки налога с зарплат</small></span><button class="link" data-act="fstaff">'+(S.firm.staff||0)+'</button></div></section>';
   h+='<section class="card g"><h3>Результат за месяц</h3><div class="big">'+money(c.profit)+'</div><p class="mut">Выручка '+money(c.inc)+', расходы '+money(c.opex+c.pay+c.tax)+'.</p>'
     +kv('Выручка',c.inc)+kv('Расходы без зарплат',c.opex)+kv('Зарплаты',c.pay)+kv('Уплаченные налоги',c.tax)+kv('Прибыль',c.profit,1)+'</section>';
-  h+='<section class="card"><h3>Зарплаты и взносы</h3>'+kv('Зарплаты (брутто)',c.pay)+kv('Взносы работодателя 23,59%',F.erc,0,'Сверх зарплаты, платит фирма')+kv('Взносы работника 10,5%',F.eec,0,'Удерживаются из зарплаты')+kv('Подоходный налог 25,5%',F.iin,0,'Оценка: с необлагаемым минимумом 550 € на сотрудника')+kv('Полная стоимость зарплат',c.pay+F.erc,1)+'</section>';
-  h+='<section class="card g"><h3>Дивиденды</h3><p class="mut">Фирма платит налог 20/80 только при выплате дивидендов, а не с прибыли. Свободная прибыль с начала года: <b>'+money(F.free)+'</b>.</p>'
-    +kv('Обычный режим: дивиденды на руки',F.std.net,1,'Налог фирмы '+money(F.std.cit)+' (20% от суммы к распределению)')
-    +kv('Льготный режим: дивиденды на руки',F.alt.net,1,'15/85 и ещё 6% подоходного. Только если все владельцы физлица. Налог фирмы '+money(F.alt.cit))
-    +'<p class="mut" style="font-size:13px">Выплаченные дивиденды: '+money(Y.div)+'. Разница между режимами невелика, выбор зависит от состава владельцев.</p></section>';
-  if(S.firm.vat)h+='<section class="card"><h3>НДС за месяц</h3>'+kv('НДС с продаж',F.vatOut,0,'21% внутри суммы')+kv('НДС к зачёту с расходов',F.vatIn)+kv('К уплате',F.vat,1,'Декларация до 20-го, оплата до 23-го следующего месяца')+'</section>';
-  else{const p=Y.inc/LF.vatLim*100; h+='<section class="card"><h3>Порог регистрации НДС</h3><div class="cr"><div class="l"><span class="n">Оборот с начала года</span><span class="v">'+moneyR(Y.inc)+' <small>из '+moneyR(LF.vatLim)+'</small></span></div>'+bar(p,p>=100?'var(--bad)':p>=70?'var(--warn)':'var(--bar)')+'</div></section>'}
-  h+='<section class="card"><h3>Сроки</h3>'+[['До 17-го каждого месяца','Отчёт по зарплатам и взносам, оплата до 23-го'],['До 20-го','Декларация НДС за прошлый месяц, оплата до 23-го'],['После выплаты дивидендов','Налог на распределённую прибыль: срок и форму уточните в VID'],['До 31 мая '+(yr+1),'Годовой отчёт за '+yr]].map(r=>'<div class="kv"><span>'+r[0]+'<small>'+r[1]+'</small></span></div>').join('')+'</section>';
-  h+='<p class="mut" style="font-size:12.5px;padding:0 2px;line-height:1.5">Ориентировочный расчёт по правилам Латвии на 2026 год (<a href="https://www.vid.gov.lv" target="_blank" rel="noopener" style="color:var(--accent-hi)">VID</a>). Это не налоговая консультация: сверяйтесь с VID или бухгалтером.</p>';
+  h+='<section class="card"><h3>Зарплаты и взносы</h3>'+kv('Зарплаты (брутто)',c.pay)+kv('Взносы работодателя '+pcs(P.er),F.erc,0,'Сверх зарплаты, платит фирма')+kv('Взносы работника '+pcs(P.ee),F.eec,0,'Удерживаются из зарплаты')+kv('Налог с зарплат '+pcs(P.pit),F.iin,0,'Оценка по ставке'+(P.ntm?' с необлагаемым минимумом '+moneyR(P.ntm)+' на сотрудника':''))+kv('Полная стоимость зарплат',c.pay+F.erc,1)+'</section>';
+  if(P.mode==='dist'){
+    h+='<section class="card g"><h3>Дивиденды</h3><p class="mut">Фирма платит налог '+Math.round(P.cit*100)+'/'+Math.round((1-P.cit)*100)+' только при выплате дивидендов, а не с прибыли. Свободная прибыль с начала года: <b>'+money(F.free)+'</b>.</p>'
+      +kv('Обычный режим: дивиденды на руки',F.std.net,1,'Налог фирмы '+money(F.std.cit)+' ('+pcs(P.cit)+' от суммы к распределению)'+(P.divTax?', с дивидендов владелец платит ещё '+pcs(P.divTax):''))
+      +(F.alt?kv('Льготный режим: дивиденды на руки',F.alt.net,1,Math.round(P.alt.cit*100)+'/'+Math.round((1-P.alt.cit)*100)+' и ещё '+pcs(P.alt.pit)+' подоходного. Только если все владельцы физлица. Налог фирмы '+money(F.alt.cit)):'')
+      +'<p class="mut" style="font-size:13px">Выплаченные дивиденды: '+money(Y.div)+'.'+(F.alt?' Разница между режимами невелика, выбор зависит от состава владельцев.':'')+'</p></section>';
+  }else{
+    h+='<section class="card g"><h3>Налог на прибыль и дивиденды</h3><p class="mut">Фирма платит налог на прибыль '+pcs(F.cit)+' с результата с начала года. Затем из оставшейся прибыли можно выплатить дивиденды. Свободная прибыль: <b>'+money(F.free)+'</b>.</p>'
+      +kv('Налог на прибыль с начала года',F.std.cit,0,pcs(F.cit)+' от прибыли '+money(Y.profit))
+      +kv('Дивиденды на руки',F.std.net,1,P.divTax?'После налога на дивиденды '+pcs(P.divTax):'Без налога на дивиденды')
+      +'<p class="mut" style="font-size:13px">Выплаченные дивиденды: '+money(Y.div)+'.'+(P.note?' '+esc(P.note):'')+'</p></section>';
+  }
+  if(P.vat){
+    if(S.firm.vat)h+='<section class="card"><h3>НДС за месяц</h3>'+kv('НДС с продаж',F.vatOut,0,pcs(P.vat)+' внутри суммы')+kv('НДС к зачёту с расходов',F.vatIn)+kv('К уплате',F.vat,1)+'</section>';
+    else{const p=Y.inc/P.vatLim*100; h+='<section class="card"><h3>Порог регистрации НДС</h3><div class="cr"><div class="l"><span class="n">Оборот с начала года</span><span class="v">'+moneyR(Y.inc)+' <small>из '+moneyR(P.vatLim)+'</small></span></div>'+bar(p,p>=100?'var(--bad)':p>=70?'var(--warn)':'var(--bar)')+'</div></section>'}
+  }
+  h+='<section class="card"><h3>Сроки</h3>'+P.dl(yr).map(r=>'<div class="kv"><span>'+esc(r[0])+'<small>'+esc(r[1])+'</small></span></div>').join('')+'</section>';
+  if(P.note&&P.mode==='dist')h+='<p class="mut" style="font-size:13px;padding:0 2px">'+esc(P.note)+'</p>';
+  h+=disclaimer();
   return h;
 }
-function vTax(m,s){
+
+function taxModelG(m,reg){
+  const cc=CC(), rg=cc.se.regs.find(r=>r.id===reg)||cc.se.regs[0], P=regPar(rg), yr=m.slice(0,4), rows=[];
+  let cp=0,cinc=0,cpaid=0,cop=0,n=0,prev=0,prevS=0,prevI=0;
+  for(let k=1;k<=12;k++){
+    const key=yr+'-'+pad(k); if(key>m)break; n++;
+    const b=bizMonth(key); cinc+=b.inc; cp+=b.profit; cpaid+=b.paid; cop+=b.opex;
+    const r=cc.se.calc(rg.id,{inc:cinc,opex:cop,profit:cp,n},P), tot=r.soc+r.inc;
+    rows.push({key,inc:b.inc,opex:b.opex,profit:b.profit,paid:b.paid,vs:clamp0(r.soc-prevS),ii:clamp0(r.inc-prevI),due:clamp0(tot-prev)});
+    prev=tot; prevS=r.soc; prevI=r.inc;
+  }
+  return {rows,cur:rows[rows.length-1],ytd:{inc:cinc,profit:cp,paid:cpaid,due:prev,vs:prevS,iin:prevI}};
+}
+function seLimitInsights(M,c){
+  const cc=CC(), rg=cc.se.regs.find(r=>r.id===curReg()), out=[];
+  if(rg&&rg.lim){const L=rg.lim, used=L.per==='месяц'?c.inc:M.ytd.inc, p=used/L.v*100;
+    if(p>=80)out.push({tone:p>100?'bad':'warn',title:Math.round(p)+'% от лимита: '+L.name.toLowerCase(),text:'Лимит '+moneyR(L.v)+' в '+(L.per==='месяц'?'месяц':'год')+'. При превышении нужен другой режим.'})}
+  const v=cc.se.vat;
+  if(v&&v.thr){const p=M.ytd.inc/v.thr*100; if(p>=80)out.push({tone:p>100?'bad':'warn',title:'Оборот '+Math.round(p)+'% от порога НДС',text:'Порог регистрации '+moneyR(v.thr)+'.'+(v.note?' '+v.note+'.':'')})}
+  return out;
+}
+function vTaxG(m,s){
+  const cc=CC(), R=curReg(), M=taxModel(m,R), c=M.cur, Y=M.ytd, net=c.inc-c.opex-c.due, rg=cc.se.regs.find(r=>r.id===R);
+  const kv=(a,b,st,hint)=>'<div class="kv'+(st?' strong':'')+'"><span>'+a+(hint?'<small>'+hint+'</small>':'')+'</span><b>'+money(b)+'</b></div>';
+  let h='<section class="card"><div class="hd"><h3>Режим налогов</h3></div><div class="chips">'+cc.se.regs.concat([{id:'custom',name:'Своя ставка'}]).map(r=>'<button class="chip'+(R===r.id?' on':'')+'" data-act="regime" data-v="'+r.id+'">'+esc(r.name)+'</button>').join('')+'</div><p class="mut">'+(R==='custom'?'Любая страна: вы сами задаёте ставку и базу.':esc(rg.desc))+'</p>';
+  if(rg&&rg.param){const cur=S.biz[rg.param.k]!=null?S.biz[rg.param.k]:rg.param.def; h+='<div class="kv"><span>'+esc(rg.param.label)+'<small>'+esc(rg.param.hint)+'</small></span><button class="link" data-act="setparam" data-v="'+rg.param.k+'">'+cur+'%</button></div>'}
+  if(R==='custom')h+='<div class="hd"><b class="big" style="font-size:26px">'+S.biz.rate+'%</b><button class="link" data-act="setrate">Изменить ставку</button></div><div class="chips"><button class="chip'+(S.biz.base==='income'?' on':'')+'" data-act="base" data-v="income">От дохода</button><button class="chip'+(S.biz.base==='profit'?' on':'')+'" data-act="base" data-v="profit">От прибыли</button></div>';
+  h+='</section>';
+  h+='<section class="card g"><h3>Отложить за этот месяц</h3><div class="big">'+money(c.due)+'</div><p class="mut">'+(c.inc?Math.round(c.due/c.inc*100)+'% от дохода. ':'')+'На руки останется '+money(net)+'.</p>';
+  h+=kv('Доход',c.inc)+kv('Рабочие расходы',c.opex)+kv('Прибыль',c.profit);
+  if(R==='custom')h+=kv('Налог '+S.biz.rate+'%',c.due,1,S.biz.base==='profit'?'От прибыли':'От дохода');
+  else{ if(rg.socL)h+=kv(rg.socL,c.vs,0,'Оценка за этот месяц'); h+=kv(rg.incL,c.ii,0,'Оценка: накопительно с начала года'); h+=kv('Налоги всего',c.due,1)}
+  h+=kv('Останется вам',net,1)+'</section>';
+  const regs=cc.se.regs;
+  if(regs.length>1&&Y.inc>0){
+    const rows=regs.map(r=>({r,d:taxModel(m,r.id).ytd.due})), best=rows.reduce((a,b)=>b.d<a.d?b:a);
+    h+='<section class="card"><h3>Что выгоднее с начала года</h3>'+rows.map(x=>kv(esc(x.r.name),x.d,0,x.r.id===best.r.id?'Сейчас выгоднее всего':'')).join('')+'<p class="mut">Сравнение по вашим доходам и расходам. Для окончательного выбора учитывайте условия и ограничения режимов.</p></section>';
+  }
+  h+='<section class="card g"><h3>С начала года</h3>'+kv('Доход',Y.inc)+kv('Прибыль',Y.profit)+kv('Налоги начислено',Y.due)+kv('Уже уплачено',Y.paid)+kv('Нужно держать отложенным',Math.max(0,Y.due-Y.paid),1,'Платежи вносите в категорию «Налоги и взносы»')+'</section>';
+  h+='<section class="card"><h3>Сроки</h3>'+cc.se.dl().map(r=>'<div class="kv"><span>'+esc(r[0])+'<small>'+esc(r[1])+'</small></span></div>').join('')+'</section>';
+  h+=disclaimer();
+  return h;
+}
+function disclaimer(){const cc=CC(); return '<p class="mut" style="font-size:12.5px;padding:0 2px;line-height:1.5">Ориентировочный расчёт по правилам страны «'+esc(cc.name)+'» на 2026 год, данные проверены '+dRu(TAX_CHECKED)+' (<a href="'+esc(cc.src[1])+'" target="_blank" rel="noopener" style="color:var(--accent-hi)">'+esc(cc.src[0])+'</a>). Это не налоговая консультация: итоговые суммы зависят от вашей ситуации, сверяйтесь с налоговой службой или бухгалтером.</p>'}
+function openCountry(first){
+  const ids=Object.keys(COUNTRIES);
+  sheet('<h2>'+(first?'Выберите страну':'Страна')+'</h2><p class="mut">От страны зависят валюта, налоги самозанятого и фирмы, НДС и сроки отчётов. Личные финансы работают одинаково везде.</p>'
+   +'<div class="clist">'+ids.map(id=>'<button class="crow'+(S.country===id&&S.cset?' on':'')+'" data-act="setcountry" data-v="'+id+'"><span class="cc">'+id+'</span><span class="cn">'+esc(COUNTRIES[id].name)+'</span><span class="cu2">'+esc(COUNTRIES[id].cur)+'</span></button>').join('')+'</div>'
+   +(first?'':'<div class="btns"><button class="btn ghost" data-act="close">Закрыть</button></div>'));
+}
+function pickCountry(id){
+  if(!COUNTRIES[id])return; const changed=S.country!==id;
+  S.country=id; S.cset=true;
+  if(changed){S.cur=COUNTRIES[id].cur; S.biz.regime=COUNTRIES[id].se.regs[0].id; S.firm.vat=false}
+  touch(); closeModal(); render();
+}
+
+function vTax(m,s){return S.country==='LV'?vTaxLV(m,s):vTaxG(m,s)}
+function vTaxLV(m,s){
   const R=S.biz.regime, M=taxModel(m), c=M.cur, Y=M.ytd, net=c.inc-c.opex-c.due;
   const mo=Number(m.slice(5)), yr=m.slice(0,4), q=Math.ceil(mo/3), qs=(q-1)*3+1;
   const qr=M.rows.filter(r=>Number(r.key.slice(5))>=qs);
@@ -1181,7 +1376,7 @@ function saveTx(){
   closeModal(); render();
 }
 function openSettings(){
-  sheet('<h2>Настройки</h2><div><div class="lab">Валюта</div><div class="chips">'+CURS.map(c=>'<button class="chip'+(S.cur===c?' on':'')+'" data-act="cur" data-v="'+c+'">'+c+'</button>').join('')+'</div></div>'
+  sheet('<h2>Настройки</h2><div><div class="lab">Страна</div><div class="chips"><button class="chip on" data-act="country">'+esc(CC().name)+' · сменить</button></div></div><div><div class="lab">Валюта</div><div class="chips">'+CURS.map(c=>'<button class="chip'+(S.cur===c?' on':'')+'" data-act="cur" data-v="'+c+'">'+c+'</button>').join('')+'</div></div>'
    +'<div class="btns" style="flex-direction:column"><button class="btn ghost" data-act="setpay">День зарплаты: '+S.payday+'-е число</button><button class="btn ghost" data-act="csv">Экспорт операций в CSV</button>'+(S.demo?'<button class="btn ghost" data-act="clrdemo">Удалить примеры</button>':'')+'<button class="btn ghost" data-act="clearsec">Очистить раздел «'+(mode==='b'?'Самозанятость':'Личные')+'»</button><button class="btn ghost" data-act="reset" style="color:var(--bad)">Стереть все данные</button></div>'
    +'<p class="mut" style="font-size:13px">'+(COL?'Данные сохраняются в вашем аккаунте и видны только вам.':'Данные хранятся в этом браузере. Если страница откроется в другом месте, они не появятся.')+'</p>');
 }
@@ -1262,6 +1457,9 @@ document.addEventListener('click',ev=>{
     case 'fund': fundGoal(id); break;
     case 'delgoal': { const g=S.goals.find(x=>x.id===id); askConfirm('Удалить цель?','«'+g.name+'» исчезнет. Записи в «Сбережениях» останутся.','Удалить',()=>{S.goals=S.goals.filter(x=>x.id!==id); touch(); render()}); break; }
     case 'settings': openSettings(); break;
+    case 'country': openCountry(false); break;
+    case 'setcountry': pickCountry(v); break;
+    case 'setparam': { const rg=CC().se.regs.find(r=>r.param&&r.param.k===v); if(rg)askNum(rg.param.label,S.biz[v]!=null?S.biz[v]:rg.param.def,rg.param.hint,x=>{S.biz[v]=Math.min(100,x); touch(); render()}); break; }
     case 'cur': S.cur=v; touch(); openSettings(); render(); break;
     case 'csv': { const t=csv(); sheet('<h2>Экспорт в CSV</h2><p class="mut">Скопируйте текст и вставьте в таблицу или заметки.</p><textarea id="ct" class="inp" readonly></textarea><div class="btns"><button class="btn ghost" data-act="close">Закрыть</button><button class="btn" id="cc">Скопировать</button></div>'); $('#ct').value=t;
       $('#cc').onclick=async()=>{try{await navigator.clipboard.writeText(t);$('#cc').textContent='Скопировано'}catch(e){$('#ct').select();$('#cc').textContent='Выделено, скопируйте вручную'}}; break; }
@@ -1274,7 +1472,9 @@ document.addEventListener('click',ev=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeModal()});
 
-load(); curMonth=periodOfDate(todayStr()); render(); initDb();
+let askedC=false;
+function maybeAskCountry(){ if(S.cset||askedC)return; askedC=true; setTimeout(()=>{ if(!S.cset&&$('#modal').hidden)openCountry(true) },250) }
+load(); curMonth=periodOfDate(todayStr()); render(); initDb().finally(()=>setTimeout(()=>{ if(!COL)maybeAskCountry() },1500));
 </script>
 </body>
 </html>

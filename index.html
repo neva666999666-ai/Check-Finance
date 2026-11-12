@@ -889,7 +889,7 @@ function quickGo(){const q=$('#vq'); const t=q?q.value.trim():''; quickClose(); 
 function armIdle(ms){clearTimeout(vIdle); vIdle=setTimeout(()=>voiceFinish(),ms||2200)}
 function voiceStart(){
   if(vLive){voiceFinish();return}
-  vc.base=''; vc.items=null;
+  vc.base=''; vc.part=''; vc.items=null;
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const fail=()=>{vLive=false; clearTimeout(vIdle); vPill(false); vc.noMic=true; quickBar()};
   if(vc.noMic||(document.featurePolicy&&!document.featurePolicy.allowsFeature('microphone'))){quickBar(); return}
@@ -910,8 +910,8 @@ function voiceStart(){
 async function voiceFinish(){
   if(!vLive)return; vLive=false; clearTimeout(vIdle);
   try{vSR&&vSR.stop()}catch(e){}
-  try{if(vc.dict&&vc.on)await vc.dict.stop()}catch(e){}
-  const text=(vc.base||'').trim();
+  try{if(vc.dict&&vc.on)await Promise.race([vc.dict.stop(),new Promise(r=>setTimeout(r,1500))])}catch(e){}
+  const text=((vc.base||'')+' '+(vc.part||'')).trim(); vc.part='';
   if(!text){vPill(false); vToast(T('Ничего не услышал')); return}
   vPill(true,T('Записываю…'));
   let raw=await aiParse(text); if(!raw||!raw.length)raw=localParse(text);
@@ -980,8 +980,8 @@ function vcSave(){
 }
 (async()=>{try{
   if(!window.claude||!window.claude.use)return; const d=await window.claude.use('dictation'); if(!d)return; vc.dict=d;
-  d.onPartial(({text})=>{const t=$('#vt'); if(t)t.value=(vc.base?vc.base+' ':'')+text; if(vLive){vPill(true,((vc.base?vc.base+' ':'')+text).trim()); armIdle()}});
-  d.onFinal(({text})=>{vc.base=((vc.base?vc.base+' ':'')+text).trim(); const t=$('#vt'); if(t)t.value=vc.base; if(vLive){vPill(true,vc.base); armIdle()}});
+  d.onPartial(({text})=>{vc.part=text||''; const t=$('#vt'); if(t)t.value=(vc.base?vc.base+' ':'')+text; if(vLive){vPill(true,((vc.base?vc.base+' ':'')+text).trim()); armIdle()}});
+  d.onFinal(({text})=>{vc.part=''; vc.base=((vc.base?vc.base+' ':'')+text).trim(); const t=$('#vt'); if(t)t.value=vc.base; if(vLive){vPill(true,vc.base); armIdle()}});
   d.onState(({state})=>{vc.on=state==='listening'; vcMic(); if(state==='idle'&&vLive&&!vc.on)voiceFinish()});
   const ac=document.querySelector('.acts'); if(ac)ac.dataset.dict='1';
 }catch(e){}})();

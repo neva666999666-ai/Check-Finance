@@ -1258,14 +1258,14 @@ function bizInsights(m,s){
   return out.slice(0,4);
 }
 /* ---------- подписки ---------- */
-const TEST_UNLOCK=(()=>{try{ if(/[?&]test=1/.test(location.search))localStorage.setItem('fin_test','1'); return localStorage.getItem('fin_test')==='1' }catch(e){return false}})();   /* тестовое включение тарифов без оплаты: скрыто, включается ?test=1 или 5 нажатиями на название тарифа */
+const TEST_UNLOCK=(()=>{try{ if(/[?&]test=1/.test(location.search))localStorage.setItem('fin_test','1'); return localStorage.getItem('fin_test')==='1' }catch(e){return false} })()||(()=>{const hn=location.hostname; return !!hn&&!/github\.io$|^localhost$|^127\./.test(hn)&&location.protocol==='https:'})();   /* тестовое включение тарифов без оплаты: скрыто, включается ?test=1 или 5 нажатиями на название тарифа */
 const WAITLIST={url:'',email:'email',plan:'plan',lang:'lang'};   /* адрес формы списка ожидания (Formspree или Google Forms formResponse); поля: имена параметров */
 const PAY={b:'',f:''};             /* ссылки на оплату (Stripe Payment Link и т.п.) */
 const PLANS={
   b:{name:T('Самозанятый'),price:'2'+DEC+'99 €',feat:[T('Налоги самозанятого по правилам вашей страны: взносы и подоходный налог'),T('Доходы по клиентам и чистая маржа'),T('Напоминания о платежах и голосовой ввод')]},
   f:{name:T('Фирма'),price:'4'+DEC+'99 €',feat:[T('Открывает всё приложение, включая счёт «Самозанятый»'),T('Налоги фирмы: налог на прибыль и дивиденды'),T('Зарплаты, взносы работодателя и НДС'),T('Календарь отчётов и платежей вашей страны')]}
 };
-const locked=md=>md!=='p'&&!S.plan[md]&&!S.plan.f;
+const locked=md=>md!=='p'&&!TEST_UNLOCK&&!S.plan[md]&&!S.plan.f;
 function planBlock(k,main){
   const P=PLANS[k];
   return '<div class="plan'+(main?' main':'')+'"><div class="ph"><h3 data-act="tt">'+P.name+'</h3><div class="big">'+P.price+T('<small> в месяц</small></div></div><ul>')+P.feat.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'

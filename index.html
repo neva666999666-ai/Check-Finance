@@ -1188,7 +1188,7 @@ function vNews(){
 }
 
 /* ---------- можно тратить сегодня / частые траты ---------- */
-const dailyOf=()=>((S.daily&&S.daily[mode])||0);
+const dailyOf=()=>0;
 function spendCalc(m,s){
   const b=S.budget.total, base=b>0?b:s.inc, td=todayStr(), left=Math.max(1,pLen(m)-dayIdx(m,td)), unpaid=fixedUnpaid(m);
   const today=s.list.filter(t=>t.t==='e'&&!isSav(t)&&t.date===td).reduce((a,t)=>a+t.amt,0);
@@ -1210,7 +1210,7 @@ function spendCard(m,s){
     line=T('Ваш лимит: ')+moneyR(dl)+T(' в день, ')+c.left+' '+T('дн. до конца периода')+'. ';
     if(c.base>0){ const days=(c.avail+c.today)/dl; line+= days>=c.left?T('Денег хватит до конца периода.'):T('Денег хватит примерно на ')+Math.max(0,Math.floor(days))+' '+T('дн., не хватает ')+moneyR(Math.max(0,dl*c.left-(c.avail+c.today)))+'.' }
   } else line=T('Норма рассчитана автоматически: ')+moneyR(c.auto)+T(' в день, ')+c.left+' '+T('дн. до конца периода')+'.';
-  return '<section class="card g sp"><div class="hd"><h3>'+T('Можно тратить сегодня')+'</h3><button class="link" data-act="daily">'+T('Изменить')+'</button></div>'
+  return '<section class="card g sp"><div class="hd"><h3>'+T('Можно тратить сегодня')+'</h3></div>'
    +'<p class="mut spw">'+why+'</p>'+big+'<div class="spl"><span>'+T('Потрачено сегодня ')+moneyR(c.today)+'</span><span>'+T('из ')+moneyR(allow)+'</span></div>'
    +bar(allow>0?c.today/allow*100:100,c.today>allow?'var(--bad)':'var(--bar)')
    +'<p class="mut">'+sub+line+(c.unpaid>0?' '+T('С учётом неоплаченных обязательных ')+moneyR(c.unpaid)+'.':'')+'</p></section>';

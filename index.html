@@ -794,8 +794,36 @@ const KWI={salary:/зарплат|аванс|salary|advance|wage|paycheck/,shoot
 const KWBI={bi1:/услуг|проект|заказ|клиент|съемк|монтаж|service|project|\border\b|client|shoot|editing/,bi2:/продаж|продал|товар|\bsale|\bsold\b|goods/};
 const BIZ_ONLY=['be_gear','be_ads','be_sub','tax'];
 function vcDate(low){const d=new Date(); if(/позавчера|day before yesterday/.test(low))d.setDate(d.getDate()-2); else if(/вчера|yesterday/.test(low))d.setDate(d.getDate()-1); return ymd(d)}
+const NW={ноль:0,один:1,одна:1,одну:1,два:2,две:2,три:3,четыре:4,пять:5,шесть:6,семь:7,восемь:8,девять:9,десять:10,одиннадцать:11,двенадцать:12,тринадцать:13,четырнадцать:14,пятнадцать:15,шестнадцать:16,семнадцать:17,восемнадцать:18,девятнадцать:19,двадцать:20,тридцать:30,сорок:40,пятьдесят:50,шестьдесят:60,семьдесят:70,восемьдесят:80,девяносто:90,сто:100,двести:200,триста:300,четыреста:400,пятьсот:500,шестьсот:600,семьсот:700,восемьсот:800,девятьсот:900,
+ zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+function wordsToDigits(s){
+  const tk=s.split(/(\s+)/); const out=[]; let i=0;
+  const isN=w=>{w=w.toLowerCase().replace(/[.,!?;:]+$/,''); return w in NW||/^(?:hundred|thousand|тысяч[аиу]?|тыс|полтора|полторы|сотня)$/.test(w)};
+  while(i<tk.length){
+    const w=tk[i]; if(/^\s+$/.test(w)||!isN(w)){out.push(w);i++;continue}
+    let cur=0,tot=0,j=i,last=i;
+    while(j<tk.length){
+      const x=tk[j]; if(/^\s+$/.test(x)){j++;continue}
+      const k=x.toLowerCase().replace(/[.,!?;:]+$/,'');
+      if(k==='and'||k==='и'){ const nx=tk.slice(j+1).find(y=>!/^\s+$/.test(y)); if(nx&&isN(nx)){j++;continue} break }
+      if(!isN(x))break;
+      if(k in NW)cur+=NW[k]; else if(k==='hundred')cur=Math.max(cur,1)*100; else if(k==='полтора'||k==='полторы')cur+=1.5; else if(k==='сотня')cur+=100;
+      else {tot+=Math.max(cur,1)*1000; cur=0}
+      last=j; j++;
+    }
+    out.push(String(tot+cur)); i=last+1;
+  }
+  return out.join('');
+}
+function vcPre(s){
+  s=String(s);
+  if(!/\d/.test(s))s=wordsToDigits(s);
+  s=s.replace(/(\d{1,3})((?:[   ,.]\d{3})+)(?!\d)/g,(m,a,b)=>a+b.replace(/[   ,.]/g,''));
+  s=s.replace(/(\d+(?:[.,]\d+)?)\s*(?:к|k|тыс\.?|тысяч[аиу]?|thousand)(?![a-zЀ-ӿ])/gi,(m,a)=>String(Math.round(parseFloat(a.replace(',','.'))*1000)));
+  return s;
+}
 function localParse(text){
-  let t=String(text).replace(/(\d)[,](\d)/g,'$1.$2').replace(/(\d+)\s*(?:евро|euros?|eur|€)\s*(\d{1,2})(?!\d)/gi,'$1.$2');
+  let t=vcPre(text).replace(/(\d)[,](\d)/g,'$1.$2').replace(/(\d+)\s*(?:евро|euros?|eur|€)\s*(\d{1,2})(?!\d)/gi,'$1.$2');
   const parts=t.split(/[;\n]|,|\s(?:потом|еще|ещё)\s|\sи\s(?=(?:потратил|оплатил|купил|заплатил|получил|заработал|отложил|пришло))|\s(?:then|also)\s|\sand\s(?=(?:spent|paid|bought|received|earned|saved|got))/i).map(x=>x.trim()).filter(Boolean);
   const out=[]; let sticky=null;
   const all=t.toLowerCase().replace(/ё/g,T('е')); const firmW=/фирм|\bсиа\b|\bsia\b|компани|\bооо\b|company|\bfirm\b|\bltd\b|\bllc\b/, bizW=/самозанят|бизнес|\bип\b|для работы|по работе|self-employed|self employed|freelance|business|sole trader|for work/, perW=/личн|домашн|для себя|personal|\bhome\b|for myself/;
@@ -888,7 +916,7 @@ async function voiceFinish(){
   vPill(true,T('Записываю…'));
   let raw=await aiParse(text); if(!raw||!raw.length)raw=localParse(text);
   const items=(raw||[]).map(vcNorm).filter(Boolean); vPill(false);
-  if(!items.length){vToast(T('Не нашёл сумму: «')+text.slice(0,50)+'»'); return}
+  if(!items.length){ openVoice(); vc.base=text; const ta=$('#vt'); if(ta)ta.value=text; const e=$('#fe'); if(e)e.textContent=T('Не нашёл суммы. Назовите сумму и на что: «6,45 на оборудование».'); return }
   const ids=vcCommit(items);
   vToast(T('Записано: ')+items.map(x=>(x.t==='i'?'+':'−')+money(x.amt)+' '+catOf({t:x.t,cat:x.cat,b:x.b,f:x.f}).n).join(', '),ids);
 }

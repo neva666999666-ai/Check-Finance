@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* Layout idea: carbon black phone app with steel-blue light, frosted glass panels, flat sections between them */
 :root{
@@ -337,45 +337,6 @@ html[data-theme=light] #vpill,html[data-theme=light] #vtoast,html[data-theme=lig
 html[data-theme=light] .bar{background:rgba(15,23,42,.1)}
 html[data-theme=light] .scrim{background:rgba(40,60,110,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 html[data-theme=light] .row,html[data-theme=light] .cr,html[data-theme=light] .ins,html[data-theme=light] .kv,html[data-theme=light] .fx{border-top-color:rgba(255,255,255,.65)}
-
-/* ---- редизайн: цвет счёта, шрифты, формы ---- */
-:root{--display:'Sora','Helvetica Neue',Helvetica,Arial,sans-serif;--body:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:'Sora','Helvetica Neue',Helvetica,Arial,sans-serif;
-  --acc:#6FE3B8;--acc-hi:#BDF6DF;--accg:rgba(40,170,125,.36);--bgg1:rgba(30,120,95,.22);--bgg2:rgba(30,90,110,.16)}
-html[data-acct=p]{--acc:#6FE3B8;--acc-hi:#BDF6DF;--accg:rgba(40,170,125,.36);--bgg1:rgba(30,120,95,.22);--bgg2:rgba(30,90,110,.16)}
-html[data-acct=b]{--acc:#C3CEDF;--acc-hi:#EDF2F9;--accg:rgba(130,150,185,.32);--bgg1:rgba(110,125,155,.2);--bgg2:rgba(80,95,125,.15)}
-html[data-acct=f]{--acc:#E9C874;--acc-hi:#F8E7AE;--accg:rgba(205,160,60,.3);--bgg1:rgba(170,130,50,.2);--bgg2:rgba(120,90,40,.14)}
-html{--accent:var(--acc);--accent-hi:var(--acc-hi);--bar:var(--acc);--btnbg:linear-gradient(180deg,var(--acc-hi),var(--acc));--btnink:#06120D}
-html[data-theme=light][data-acct=p]{--acc:#0E9F6E;--acc-hi:#0A7A55;--accg:rgba(40,190,140,.35)}
-html[data-theme=light][data-acct=b]{--acc:#5F7391;--acc-hi:#3D506C;--accg:rgba(110,130,170,.35)}
-html[data-theme=light][data-acct=f]{--acc:#B78A1E;--acc-hi:#8A6510;--accg:rgba(220,170,60,.35)}
-html[data-theme=light]{--btnbg:linear-gradient(180deg,#25324B,#0F172A);--btnink:#fff}
-html[data-theme=light] .acct::before{opacity:.8}
-body{background:radial-gradient(900px 620px at -6% 28%,var(--bgg1),transparent 60%),radial-gradient(1000px 600px at 90% 100%,var(--bgg2),transparent 60%),var(--bg)}
-html[data-theme=light] body{background:radial-gradient(520px 420px at 8% 10%,var(--accg),transparent 65%),radial-gradient(560px 460px at 96% 28%,rgba(190,140,255,.34),transparent 65%),radial-gradient(620px 520px at 20% 82%,rgba(90,215,190,.38),transparent 65%),radial-gradient(520px 420px at 92% 96%,rgba(255,170,150,.32),transparent 65%),#E9EEF8}
-.acct::before{background:radial-gradient(60% 62% at 50% 42%,var(--accg),transparent 72%)}
-.fab{border-radius:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 0 0 5px var(--scrim),0 14px 34px -6px var(--accg)}
-html[data-theme=light] .fab{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 5px rgba(255,255,255,.6),0 14px 30px -8px rgba(15,23,42,.5)}
-/* нижняя панель: активная вкладка плашкой */
-nav .tb{border-radius:16px;transition:background .2s,color .2s}
-nav .tb.on{color:var(--acc-hi);background:rgba(var(--w),.09)}
-nav .tb.on::before{display:none}
-html[data-theme=light] nav .tb.on{color:var(--acc-hi);background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 4px 12px -6px rgba(40,70,130,.4)}
-/* быстрые действия: скруглённые квадраты */
-.ac button{width:54px;height:54px;border-radius:19px}
-.ac.mic button{width:62px;height:62px;border-radius:23px;margin-top:-6px;color:var(--btnink);background:var(--btnbg);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 12px 30px -8px var(--accg)}
-html[data-theme=light] .ac.mic button{color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 12px 26px -8px rgba(15,23,42,.55)}
-.ac{gap:8px;font-weight:600}
-/* счета: переключатель и точки */
-.pager i.on{background:var(--acc)}
-.seg.mode button.on{background:var(--acc);color:var(--btnink)}
-html[data-theme=light] .seg.mode button.on{background:var(--onbg);color:var(--onink)}
-/* акценты */
-.link,.demo button{color:var(--acc-hi)}
-.slide .al{letter-spacing:.2em}
-.bar i{box-shadow:0 0 12px -2px currentColor}
-.card h3{letter-spacing:.14em;color:var(--faint)}
-.inp:focus{box-shadow:inset 0 0 0 1.5px var(--acc),0 0 0 4px var(--accg)}
-html[data-theme=light] .ac.mic button{background:linear-gradient(180deg,#25324B,#0F172A)!important;color:#fff!important}
 </style>
 </head>
 <body>
@@ -898,7 +859,7 @@ function slideTick(sl){
   const idx=sl.clientWidth?Math.round(sl.scrollLeft/sl.clientWidth):0;
   const pp=sl.clientWidth?sl.scrollLeft/sl.clientWidth:0; sl.style.setProperty('--p',pp.toFixed(3));
   sl.querySelectorAll('.slide').forEach((el,k)=>el.style.setProperty('--d',Math.min(1,Math.abs(k-pp)).toFixed(3)));
-  document.querySelectorAll('#pager i').forEach((d,k)=>d.classList.toggle('on',k===idx)); if(MODES[idx]&&document.documentElement.dataset.acct!==MODES[idx])document.documentElement.dataset.acct=MODES[idx];
+  document.querySelectorAll('#pager i').forEach((d,k)=>d.classList.toggle('on',k===idx));
 }
 
 /* ---------- голосовой ввод ---------- */
@@ -1278,7 +1239,7 @@ function monthsChart(m){
   const ms=[]; for(let i=5;i>=0;i--)ms.push(addMonths(m,-i)); const d=ms.map(x=>sums(x)); const mx=Math.max(1,...d.map(x=>Math.max(x.inc,x.exp)));
   const W=340,base=100,slot=W/6; let g='';
   d.forEach((x,i)=>{const hi=x.inc/mx*(base-14), he=x.exp/mx*(base-14), cx=i*slot+slot/2;
-    g+='<rect x="'+(cx-17)+'" y="'+(base-hi)+'" width="16" height="'+hi+'" rx="3" fill="var(--good)"/><rect x="'+(cx+1)+'" y="'+(base-he)+'" width="16" height="'+he+'" rx="3" fill="var(--exp)"/><text x="'+cx+'" y="115" text-anchor="middle">'+MN[Number(ms[i].slice(5))-1].slice(0,3)+'</text>'});
+    g+='<rect x="'+(cx-17)+'" y="'+(base-hi)+'" width="16" height="'+hi+'" rx="3" fill="var(--good)"/><rect x="'+(cx+1)+'" y="'+(base-he)+'" width="16" height="'+he+'" rx="3" fill="var(--bar)"/><text x="'+cx+'" y="115" text-anchor="middle">'+MN[Number(ms[i].slice(5))-1].slice(0,3)+'</text>'});
   return T('<svg class="ch" viewBox="0 0 340 120" role="img" aria-label="Доходы и расходы за 6 месяцев"><line x1="0" x2="340" y1="')+base+'" y2="'+base+T('" stroke="var(--line)"/><text x="0" y="9">макс. ')+moneyR(mx)+'</text>'+g+T('</svg><div class="leg"><span><i style="background:var(--good)"></i>Доходы</span><span><i style="background:var(--bar)"></i>Расходы</span></div>');
 }
 let pieSel=null;
@@ -1581,7 +1542,7 @@ function vTaxLV(m,s){
   h+=T('<p class="mut" style="font-size:12.5px;padding:0 2px;line-height:1.5">Ориентировочный расчёт по правилам Латвии на 2026 год (данные <a href="https://www.vid.gov.lv" target="_blank" rel="noopener" style="color:var(--accent-hi)">VID</a>). Это не налоговая консультация: итоговые суммы зависят от вашей ситуации, сверяйтесь с VID или бухгалтером.</p>');
   return h;
 }
-function render(keep){ applyCats(); document.documentElement.dataset.acct=mode; document.body.classList.toggle('hid',HIDE);
+function render(keep){ applyCats(); document.body.classList.toggle('hid',HIDE);
   const s=sums(curMonth);
   $('#mlabel').textContent=mode==='p'?pLabel(curMonth):monthLabel(curMonth);
   document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.v===mode));

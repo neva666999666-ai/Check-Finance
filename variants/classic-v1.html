@@ -1665,8 +1665,8 @@ function openCountry(first){
 function pickCountry(id){
   if(!COUNTRIES[id])return; const changed=S.country!==id;
   S.country=id; S.cset=true;
-  if(changed){S.cur=COUNTRIES[id].cur; S.biz.regime=COUNTRIES[id].se.regs[0].id; S.firm.vat=false}
-  touch(); closeModal(); render();
+  if(changed){S.cur=COUNTRIES[id].cur; S.biz.regime=COUNTRIES[id].se.regs[0].id; S.firm.vat=false; S.fx=null}
+  touch(); closeModal(); render(); if(changed&&S.xcur)fxLoad(true);
 }
 
 function vTax(m,s){return S.country==='LV'?vTaxLV(m,s):vTaxG(m,s)}

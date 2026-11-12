@@ -381,7 +381,7 @@ html[data-theme=dark] .card3d{opacity:1;filter:none}
 <body>
 <div id="app">
   <header>
-    <button class="ib" id="newsbtn" data-act="news" aria-label="Новости"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14H6a2 2 0 01-2-2V5z"/><path d="M17 9h3v8a2 2 0 01-2 2"/><path d="M8 9h5M8 13h5"/></svg></button>
+    <button class="ib" id="newsbtn" data-act="tab" data-v="budget" aria-label="Бюджет"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
     <div class="months">
       <button class="ib" data-act="prevm" aria-label="Предыдущий месяц"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
       <b id="mlabel"></b>
@@ -397,7 +397,7 @@ html[data-theme=dark] .card3d{opacity:1;filter:none}
     <button class="tb" data-act="tab" data-v="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Таблица</button>
     <button class="fab" data-act="add" aria-label="Добавить операцию"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     <button class="tb" data-act="tab" data-v="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Аналитика</button>
-    <button class="tb" data-act="tab" data-v="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Бюджет</button>
+    <button class="tb" data-act="tab" data-v="news"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14H6a2 2 0 01-2-2V5z"/><path d="M17 9h3v8a2 2 0 01-2 2"/><path d="M8 9h5M8 13h5"/></svg>Новости</button>
   </nav>
   <div id="modal" class="modal" hidden><div class="scrim" data-act="close"></div><div class="sheet" id="sheet"></div></div>
 </div>
@@ -1663,7 +1663,7 @@ function render(keep){ applyCats(); document.body.classList.toggle('hid',HIDE);
   const s=sums(curMonth);
   $('#mlabel').textContent=mode==='p'?pLabel(curMonth):monthLabel(curMonth);
   document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.v===mode));
-  const bt=document.querySelector('#nav [data-v="budget"]'); bt.lastChild.textContent=mode==='p'?T('Бюджет'):T('Налоги');
+  const bt=$('#newsbtn'); if(bt)bt.setAttribute('aria-label',mode==='p'?T('Бюджет'):T('Налоги'));
   document.querySelectorAll('#nav .tb').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
   let f={home:vHome,hist:vHist,stats:vStats,budget:mode==='b'?vTax:mode==='f'?vFirm:vBudget,news:vNews}[view];
   if(locked(mode)&&view!=='news'&&view!=='home')f=()=>paywallCard(mode);
@@ -1672,7 +1672,7 @@ function render(keep){ applyCats(); document.body.classList.toggle('hid',HIDE);
     [...$('#main').childNodes].forEach(n=>{if(n!==old)n.remove()}); old.before(...kids.slice(0,k)); old.after(...kids.slice(k+1))}
   else $('#main').innerHTML=html;
   $('#mode').style.display=(view==='home'||view==='news')?'none':'';
-  { const mo=document.querySelector('.months'); if(mo)mo.style.visibility=view==='news'?'hidden':''; const nb=$('#newsbtn'); if(nb)nb.classList.toggle('on',view==='news') }
+  { const mo=document.querySelector('.months'); if(mo)mo.style.visibility=view==='news'?'hidden':''; const nb=$('#newsbtn'); if(nb)nb.classList.toggle('on',view==='budget') }
   if(view==='home'&&!old)initSlides();
 }
 

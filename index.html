@@ -145,6 +145,7 @@ body.mo main,body.mo .slides{overflow:hidden!important;touch-action:none}body.mo
 .sheet h2{font-family:var(--display);font-stretch:118%;font-weight:700;font-size:18px}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:rgba(var(--w),.04);box-shadow:inset 0 0 0 1px var(--line);border-radius:12px;padding:3px}
 .xnone .acts{visibility:hidden}
+.slide>button.xm{position:absolute!important;top:38px;right:34px;z-index:3;padding:7px 12px;border-radius:999px;background:rgba(var(--w),.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(var(--w),.22);color:var(--ink);font-size:12.5px;font-weight:700;letter-spacing:.04em;font-family:var(--display)}.slide .xm i{font-style:normal;opacity:.75;font-size:11px}
 .seg.mode{grid-template-columns:1fr 1.5fr .9fr 1fr}
 .seg.mode button{padding:9px 4px;white-space:nowrap}
 .seg button{text-align:center;padding:9px;border-radius:10px;font-weight:600;color:var(--muted)}
@@ -901,6 +902,8 @@ function xAdd(chg){
   const L=Object.keys(ISO).filter(c=>c!==S.cur);
   sheet('<h2>'+(chg?T('Сменить валюту счёта'):T('Счёт в другой валюте'))+'</h2><p class="mut">'+(chg?T('Суммы операций останутся прежними, поменяется только валюта и курс.'):T('Отдельный счёт со своими доходами и расходами. Курс подтянется из интернета, без сети будет использован последний сохранённый.'))+'</p><div class="chips">'+L.map(c=>'<button class="chip'+(chg&&c===S.xcur?' on':'')+'" data-act="'+(chg?'xset':'xpick')+'" data-v="'+esc(c)+'">'+ISO[c]+' '+esc(c)+'</button>').join('')+'</div><div class="btns"><button class="btn ghost" data-act="close">'+T('Отмена')+'</button></div>');
 }
+function xMenu(){ const f=fxState();
+  sheet('<h2>'+T('Валютный счёт')+'</h2><p class="mut">'+ISO[S.xcur]+' '+esc(S.xcur)+(f?' · 1 '+esc(S.xcur)+' = '+fxNum(f.r)+' '+esc(S.cur):'')+'</p><div class="btns" style="flex-direction:column"><button class="btn ghost" data-act="xchg">'+T('Сменить валюту')+'</button><button class="btn ghost" data-act="xrefresh">'+T('Обновить курс')+'</button><button class="btn ghost" data-act="xrate">'+T('Задать вручную')+'</button><button class="btn ghost" data-act="xdel" style="color:var(--bad)">'+T('Удалить валютный счёт')+'</button><button class="btn ghost" data-act="close">'+T('Закрыть')+'</button></div>') }
 function xRateEdit(){ const f=fxState(); askNum(T('Курс'),f?String(f.r).replace('.',DEC):'',T('Сколько ')+S.cur+T(' за 1 ')+S.xcur+'.',x=>{ if(!(x>0))return; S.fx={from:S.xcur,to:S.cur,r:x,t:Date.now(),manual:true}; touch(); render() }) }
 function xDelete(){ const n=S.tx.filter(t=>secOf(t)==='x').length; askConfirm(T('Удалить валютный счёт?'),T('Счёт и все его операции (')+n+T(') будут удалены без возможности вернуть.'),T('Удалить'),()=>{ const ms=new Set(S.tx.filter(t=>secOf(t)==='x').map(t=>mk(t.date))); S.tx=S.tx.filter(t=>secOf(t)!=='x'); S.fixed=S.fixed.filter(f=>secOf(f)!=='x'); S.xcur=null; S.fx=null; mode='p'; view='home'; ms.forEach(m=>touch(m)); touch(); render() }) }
 function xCta(){ return '<section class="card g"><div class="hd"><h3>'+T('Счёт в другой валюте')+'</h3></div><p class="mut">'+T('Отдельный счёт со своими доходами и расходами. Курс подтянется из интернета, без сети будет использован последний сохранённый.')+'</p><div class="btns"><button class="btn" data-act="xadd">'+T('Добавить счёт')+'</button></div></section>' }
@@ -920,7 +923,7 @@ function acctSlide(md){
     if(locked(md))return '<div class="slide lk" style="--i:'+MODES.indexOf(md)+'"><div class="stage" aria-hidden="true"><div class="par"><div class="cw"><img class="card3d" src="assets/card-'+md+'.webp" alt="" draggable="false"></div></div></div><span class="al">'+lab+'</span><div class="lkb" data-act="paywall" data-v="'+md+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg><b>'+PLANS[md].price+T(' в месяц</b><span>Открыть счёт</span></div></div>');
     const m=md===mode0?curMonth:periodOfDate(todayStr()), s=sums(m), bal=s.carry+s.inc-s.exp-s.sav;
     return '<div class="slide" style="--i:'+MODES.indexOf(md)+'"><div class="stage" aria-hidden="true"><div class="par"><div class="cw"><img class="card3d" src="assets/card-'+md+'.webp" alt="" draggable="false"></div></div></div><span class="al">'+lab+'</span>'
-      +'<div class="big'+(bal<0?' neg':'')+'">'+(bal<0?'−':'')+bigMoney(Math.abs(bal))+'</div>'+(md==='x'?xApprox(bal):'')
+      +'<div class="big'+(bal<0?' neg':'')+'">'+(bal<0?'−':'')+bigMoney(Math.abs(bal))+'</div>'+(md==='x'?xApprox(bal)+'<button class="xm" data-act="xmenu" aria-label="'+esc(T('Валютный счёт'))+'">'+ISO[S.xcur]+' '+esc(S.xcur)+' <i>▾</i></button>':'')
       +'<div class="sub"><span class="g1">+'+moneyR(s.inc)+'</span><span class="g2">−'+moneyR(s.exp)+'</span>'+(s.sav>0?'<span class="g3">'+moneyR(s.sav)+T(' в накопления</span>'):'')+(Math.abs(s.carry)>=0.005?'<span class="g4">'+T('с прошлых периодов ')+(s.carry<0?'−':'')+moneyR(Math.abs(s.carry))+'</span>':'')+'</div></div>';
   });
 }
@@ -2226,10 +2229,11 @@ document.addEventListener('click',ev=>{
     case 'info': sheet('<h2>'+esc(el.dataset.ti)+'</h2><p class="mut" style="line-height:1.5">'+esc(el.dataset.tx)+'</p><div class="btns"><button class="btn" data-act="close">'+T('Понятно')+'</button></div>'); break;
     case 'xadd': xAdd(); break;
     case 'xpick': S.xcur=v; if(!S.fx||S.fx.from!==v)S.fx=null; touch(); closeModal(); mode='x'; curMonth=periodOfDate(todayStr()); view='home'; render(); fxLoad(true); break;
+    case 'xmenu': xMenu(); break;
     case 'xchg': xAdd(true); break;
     case 'xset': if(v!==S.xcur){S.xcur=v; S.fx=null; touch(); fxLoad(true)} closeModal(); render(); break;
     case 'xrate': xRateEdit(); break;
-    case 'xrefresh': fxLoad(true,true); break;
+    case 'xrefresh': closeModal(); fxLoad(true,true); break;
     case 'xdel': xDelete(); break;
     case 'pie': pieSel=(id&&pieSel!==id)?id:null; render(); break;
     case 'paywall': openPaywall(v); break;

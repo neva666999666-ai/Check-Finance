@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Мои финансы</title>
 <meta name="theme-color" content="#080a0e">
-<script>(function(){try{var t=localStorage.getItem("fin_theme")||"dark";if(t==="auto")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t);var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==="light"?"#EEF1F6":"#080a0e"}catch(e){}})()</script>
+<script>(function(){try{var t=localStorage.getItem("fin_theme");if(!t){var wm=/fin_theme=(dark|light|auto)/.exec(window.name||"");t=wm?wm[1]:"dark"}if(t==="auto")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t);var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==="light"?"#EEF1F6":"#080a0e"}catch(e){}})()</script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1590,7 +1590,7 @@ function vTaxG(m,s){
 }
 function disclaimer(){const cc=CC(); return T('<p class="mut" style="font-size:12.5px;padding:0 2px;line-height:1.5">Ориентировочный расчёт по правилам страны «')+esc(cc.name)+T('» на 2026 год, данные проверены ')+dRu(TAX_CHECKED)+' (<a href="'+esc(cc.src[1])+'" target="_blank" rel="noopener" style="color:var(--accent-hi)">'+esc(cc.src[0])+T('</a>). Это не налоговая консультация: итоговые суммы зависят от вашей ситуации, сверяйтесь с налоговой службой или бухгалтером.</p>')}
 function langChips(){return '<div><div class="lab">Язык / Language</div><div class="chips"><button class="chip'+(LANG==='ru'?' on':'')+'" data-act="lang" data-v="ru">Русский</button><button class="chip'+(LANG==='en'?' on':'')+'" data-act="lang" data-v="en">English</button></div></div>'}
-function setLang(v){ if(v===LANG){closeModal();return} try{localStorage.setItem('fin_lang',v)}catch(e){} try{window.name='fin_lang='+v}catch(e){} persistLocal(); Promise.resolve(flush()).catch(()=>{}).then(()=>location.reload()) }
+function setLang(v){ if(v===LANG){closeModal();return} try{localStorage.setItem('fin_lang',v)}catch(e){} nameSet('fin_lang',v); persistLocal(); Promise.resolve(flush()).catch(()=>{}).then(()=>location.reload()) }
 function openCountry(first){
   const ids=Object.keys(COUNTRIES);
   sheet('<h2>'+(first?T('Выберите страну'):T('Страна'))+T('</h2><p class="mut">От страны зависят валюта, налоги самозанятого и фирмы, НДС и сроки отчётов. Личные финансы работают одинаково везде.</p>')
@@ -2120,7 +2120,8 @@ if(pinGet()&&PINOK)lkOpen('unlock');
 document.addEventListener('visibilitychange',()=>{ if(document.hidden)lkHiddenAt=Date.now(); else if(pinGet()&&PINOK&&!lk&&Date.now()-lkHiddenAt>30000)lkOpen('unlock') });
 let _th=null;
 const THEME=()=>{if(_th)return _th; try{const s=localStorage.getItem('fin_theme'); if(s)return s}catch(e){} return document.documentElement.getAttribute('data-theme')||'dark'};
-function applyTheme(t){ _th=t; try{localStorage.setItem('fin_theme',t)}catch(e){} let r=t; if(t==='auto')r=(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark'; document.documentElement.setAttribute('data-theme',r); const m=document.querySelector('meta[name=theme-color]'); if(m)m.content=r==='light'?'#EEF1F6':'#080a0e' }
+function nameSet(k,v){ try{const o=String(window.name||'').split(';').filter(x=>x&&x.indexOf(k+'=')!==0); o.push(k+'='+v); window.name=o.join(';')}catch(e){} }
+function applyTheme(t){ _th=t; nameSet('fin_theme',t); try{localStorage.setItem('fin_theme',t)}catch(e){} let r=t; if(t==='auto')r=(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark'; document.documentElement.setAttribute('data-theme',r); const m=document.querySelector('meta[name=theme-color]'); if(m)m.content=r==='light'?'#EEF1F6':'#080a0e' }
 function themeBlock(){ const t=THEME(); return '<div><div class="lab">'+T('Тема')+'</div><div class="chips">'+[['dark',T('Тёмная')],['light',T('Светлая')],['auto',T('Как в системе')]].map(x=>'<button class="chip'+(t===x[0]?' on':'')+'" data-act="theme" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div></div>' }
 function openSettings(){
   sheet(T('<h2>Настройки</h2><div><div class="lab">Страна</div><div class="chips"><button class="chip on" data-act="country">')+esc(CC().name)+T(' · сменить</button></div></div><div><div class="lab">Валюта</div><div class="chips">')+CURS.map(c=>'<button class="chip'+(S.cur===c?' on':'')+'" data-act="cur" data-v="'+c+'">'+c+'</button>').join('')+'</div></div>'+langChips()

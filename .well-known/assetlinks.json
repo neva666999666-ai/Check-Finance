@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "eu.neweraapp.twa",
-    "sha256_cert_fingerprints": ["98:EA:05:AA:2D:5E:36:33:2E:9A:66:8F:24:9F:98:4A:72:54:9C:47:CD:B7:B1:94:2F:4D:99:76:89:E5:DC:9B"]
+    "package_name": "eu.neweraapp.myfinance",
+    "sha256_cert_fingerprints": ["57:94:60:52:5D:3D:18:94:F8:68:F0:19:3D:6A:78:FA:3A:52:85:EF:67:96:5A:47:3B:A2:34:DF:6E:50:DC:B7"]
   }
 }]

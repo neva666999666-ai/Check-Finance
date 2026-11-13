@@ -34,6 +34,7 @@ h1{font-size:26px}h2{font-size:18px;margin-top:28px}.sw{display:flex;gap:8px;mar
 
 <h2>Уведомления и календарь</h2>
 <p>Напоминание вносить траты работает на вашем устройстве. Файл календаря (.ics) создаётся локально и добавляется в ваш календарь только по вашему действию.</p>
+<p>Если вы включите уведомления на телефон, наш сервер (Cloudflare Workers) хранит адрес доставки уведомлений вашего браузера, ключи шифрования этой подписки, часовой пояс, язык и расписание (время вечернего напоминания, дни месяца платежей и день зарплаты). Названия платежей, суммы и цели на сервер не передаются: тексты уведомлений собираются на вашем устройстве. Выключите уведомления в приложении, и эти данные будут удалены с сервера; подписка также удаляется, если браузер сообщает, что она недействительна. Доставку выполняют push-службы вашего браузера или телефона (например, Google или Apple).</p>
 
 <h2>Курсы валют</h2>
 <p>Если вы добавили счёт в другой валюте, приложение запрашивает курс у публичного сервиса курсов валют (open.er-api.com). В запросе передаются только коды двух валют и, как у любого сетевого запроса, ваш IP-адрес. Ваши суммы, операции и другие данные не передаются. Последний курс сохраняется на устройстве, без интернета используется он. Курс можно задать вручную.</p>
@@ -42,7 +43,7 @@ h1{font-size:26px}h2{font-size:18px;margin-top:28px}.sw{display:flex;gap:8px;mar
 <p>Если вы нажмёте «Хочу этот тариф», мы получаем название тарифа и язык интерфейса, чтобы понять, какой тариф интересен. E-mail необязателен: если вы его оставите, мы используем адрес только чтобы один раз сообщить о запуске тарифа, не передаём третьим лицам и удаляем по вашему запросу на neweraapp@outlook.com.</p>
 
 <h2>Передача данных третьим лицам</h2>
-<p>Кроме списка ожидания, мы не продаём и не передаём ваши данные, не показываем рекламу и не используем сторонние сервисы аналитики или отслеживания. Страница приложения может загружаться с хостинга (GitHub Pages), который по техническим причинам видит обычные сведения о запросе, например IP-адрес.</p>
+<p>Кроме списка ожидания и push-уведомлений (по вашему включению), мы не продаём и не передаём ваши данные, не показываем рекламу и не используем сторонние сервисы аналитики или отслеживания. Страница приложения может загружаться с хостинга (GitHub Pages), который по техническим причинам видит обычные сведения о запросе, например IP-адрес.</p>
 
 <h2>Удаление данных</h2>
 <p>В приложении откройте Настройки → «Стереть все данные»: будут удалены операции, бюджеты, цели, платежи, счета, реквизиты и фото чеков. Данные также удаляются при удалении приложения или очистке данных браузера. Аккаунта у приложения нет, поэтому отдельно удалять нечего.</p>
@@ -78,6 +79,7 @@ h1{font-size:26px}h2{font-size:18px;margin-top:28px}.sw{display:flex;gap:8px;mar
 
 <h2>Notifications and calendar</h2>
 <p>The reminder to log expenses works on your device. The calendar file (.ics) is created locally and is added to your calendar only when you choose to.</p>
+<p>If you turn on phone notifications, our server (Cloudflare Workers) stores your browser's push delivery address, the encryption keys of that subscription, your time zone, language and schedule (evening reminder time, payment days of the month and payday). Payment names, amounts and goals are not sent to the server: the notification text is composed on your device. Turn notifications off in the app and this data is deleted from the server; a subscription is also removed when the browser reports it as invalid. Delivery is handled by your browser's or phone's push service (for example Google or Apple).</p>
 
 <h2>Exchange rates</h2>
 <p>If you add an account in another currency, the app requests the rate from a public exchange-rate service (open.er-api.com). The request contains only the two currency codes and, as with any network request, your IP address. Your amounts, transactions and other data are not sent. The latest rate is stored on your device and used when you are offline. You can also set the rate manually.</p>

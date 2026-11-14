@@ -1979,7 +1979,7 @@ function remindNotify(){
     if(!remindDue()||!('Notification' in window)||Notification.permission!=='granted')return;
     const k='fin_rn', d=todayStr(); if(localStorage.getItem(k)===d)return; localStorage.setItem(k,d);
     const title=T('Мои финансы'), body=T('Сегодня ещё не внесено ни одной траты.');
-    if(navigator.serviceWorker&&navigator.serviceWorker.ready)navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body:body,icon:'assets/icon-192.png',tag:'fin-remind'})).catch(()=>{try{new Notification(title,{body:body})}catch(e){}});
+    if(navigator.serviceWorker&&navigator.serviceWorker.ready)navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body:body,icon:'assets/icon-v2-192.png',tag:'fin-remind'})).catch(()=>{try{new Notification(title,{body:body})}catch(e){}});
     else new Notification(title,{body:body});
   }catch(e){}
 }

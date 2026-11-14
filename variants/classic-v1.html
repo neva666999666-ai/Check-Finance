@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>MyFinance</title>
 <meta name="theme-color" content="#080a0e">
 <script>(function(){try{var t=localStorage.getItem("fin_theme");if(!t){var wm=/fin_theme=(dark|light|auto)/.exec(window.name||"");t=wm?wm[1]:"dark"}if(t==="auto")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.setAttribute("data-theme",t);var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==="light"?"#EEF1F6":"#080a0e"}catch(e){}})()</script>
@@ -43,7 +43,9 @@ html[data-theme=light]{
   --btnbg:linear-gradient(180deg,#25324B,#0F172A); --btnink:#fff; --onbg:#0F172A; --onink:#fff; --big:#0F172A; --exp:#D92D20; --inc:#12875B;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html,body{height:100%;width:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{position:fixed;inset:0}
+main{overscroll-behavior-y:contain}
 html{background:var(--bg)}
 html[data-theme=light] body{background:radial-gradient(900px 620px at -6% 28%,rgba(120,150,200,.22),transparent 60%),radial-gradient(1000px 600px at 90% 100%,rgba(150,180,225,.2),transparent 60%),var(--bg)}
 body{color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased;

@@ -397,6 +397,14 @@ html[data-theme=dark] .card3d{opacity:1;filter:none}
 .txg>div{padding:10px 12px;border-radius:14px;background:rgba(var(--w),.05);box-shadow:inset 0 0 0 1px rgba(var(--w),.08)}
 .txg small{display:block;color:var(--faint);font-size:11.5px;margin-bottom:3px;line-height:1.25}
 .txg b{font-size:15px;font-variant-numeric:tabular-nums}
+
+/* fit small phones: header + nav never overflow */
+header{padding:10px 8px 6px 10px;gap:2px;min-width:0}
+header .ib{width:34px;height:34px;flex:0 0 auto}
+.months{flex:1 1 0;min-width:0;justify-content:center}
+.months b{min-width:0;flex:1 1 auto;font-size:12.5px;letter-spacing:.04em;white-space:nowrap}
+nav{grid-template-columns:repeat(2,minmax(0,1fr)) 74px repeat(2,minmax(0,1fr))}
+nav .tb{font-size:8.5px;letter-spacing:.03em;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:clip}
 </style>
 </head>
 <body>
